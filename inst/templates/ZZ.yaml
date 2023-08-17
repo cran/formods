@@ -1,0 +1,48 @@
+# The ZZ field is a skeleton for constructing new modules
+ZZ:
+# The include section is optional. You can use this section to copy files 
+# from the directory where you are running the app to the user directory to be
+# used in the app and when saved. The source and dest options can be a path
+# command like below or a double
+# quoted string: '"/path/to/file"'
+# The dest should be relative to user directory (think the root of the zip
+# file that is exported). See formods.yaml for examples. 
+#
+# include:
+#   files:
+#   - file:
+#       source: 'file.path(system.file(package="onbrand"), "templates", "report.docx")'
+#       dest:   'file.path("config","report.docx")'
+  code: # module specific code options
+    packages: ["XXX"]
+    readOnly: TRUE
+    mode:     r
+  # Controls what is shown in the compact ui mode:
+  compact:
+    code:    TRUE 
+    clip:    TRUE 
+  # This is where you put reporting options. The expected options are shown
+  # here, but module-specific options can also be added if needed:
+  reporting:
+    enabled: FALSE
+    # Priority of reporting relative to other modules 
+    # (higher numbers are reported first)
+    priority: 1
+  # put different formatting options (widths, heights,
+  # shinyWidgets button sizes, etc) here.
+  formatting:
+    # Dimensions of code snippet box
+    code:
+      width:  800
+      height: 300
+    input:
+      width: 100
+  labels:
+    input_label: "This is the text for a label"
+  errors:
+    bad_input: "Input error message"
+  tooltips:
+    # Set to FALSE to disable tool tips for this module
+    include: TRUE
+    components:
+      input_tip: "My tool tip"

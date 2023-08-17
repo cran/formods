@@ -1,0 +1,89 @@
+MC:
+  # Controls what is shown in the compact ui mode: UD_ui_compact
+  compact:
+    code:    FALSE
+    preview: TRUE 
+  reporting: # There is no reporting for the UD module 
+    enabled: FALSE
+    priority: 1
+  labels:
+    default_ds:         "Original data set"
+    upload_button: "Select file"
+    tab_main:      "Upload file"
+    tab_code:      "Code"
+    tab_preview:   "Data preview"
+    switch_clean:  "Clean column names on upload"
+    # In the following you can use placeholder for the follwing:
+    # ===EXT===        Uploaded file extension
+    # ===FILE===       Loaded file name
+    # ===ALLOWEDEXT=== Allowed file extensions
+    msg_bad_extension: |- 
+      Incorrect file extension (===EXT===). Unable to load file  ===FILE===.
+      Only the following extesions are allowed: ===ALLOWEDEXT===.
+  tooltips:
+    # Set to FALSE to disable tool tips for this module
+    include: TRUE
+    show_code:         "Show data reading code"
+  formatting:
+    # Dimensions of the table preview in pixels
+    preview:    
+      width:  800
+      height: 500
+    code:
+      width:  500
+      height: 200
+    switch_clean:
+      tooltip: "Strange characters in column names can cause problems. When switched on, this will clean up the column headers and fix those that might break things."
+      tooltip_position: "bottom"
+  # The app supports csv, tsv, xls and xlsx. You can remove those you don't
+  # want to use
+  allowed_extensions: 
+    - csv
+    - tsv
+    - xls
+    - xlsx
+  code: # module specific code options
+    packages: ["readxl", "readr", "janitor"]
+    readOnly: TRUE
+    mode:     r    
+    # The preamble goes before the section of generated code for this module
+    # in the export script that is generated on save.
+    preamble: |- 
+      # Loading data ------------------------------------------------------------
+  # Name of the data set after being loaded
+  ds_object_name: "myDS"
+  # This is the automated data cleaning code. You can customize it however you
+  # like. You need 
+  clean_data: 
+    # To turn on cleaning but don't allow the user to change it:   
+    #   enabled: FALSE
+    #   default: TRUE
+    #
+    # To completely disable cleaning
+    #   enabled: FALSE
+    #   default: FALSE
+    #
+    # To allow the user to select cleanng and have it on by default
+    #   enabled: TRUE 
+    #   default: TRUE 
+    #
+    # To allow the user to select cleanng and have it off by default
+    #   enabled: TRUE 
+    #   default: TRUE 
+    #
+    # This enables the UI portion
+    enabled: TRUE
+    # This sets the default for cleaning
+    default: TRUE
+    code: |-
+      # Make sure you put whatever packages you use here in the packages section
+      # above.
+      #
+      # contents - data frame containing the loaded dataset.
+      # code     - code used to load the dataset you need to append any cleaning
+      #            code you generate  here.
+      # object_name - Name of the dataset object used in generated code.
+      if(system.file(package="janitor") != ""){
+        contents = janitor::clean_names(contents, case="none")
+        code = paste0(code, '\n', object_name, ' = janitor::clean_names(', object_name,', case="none")')
+      }
