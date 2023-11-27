@@ -17,7 +17,40 @@
 
 
 #'@export
-#'@title Fetches data sets from modules in the app
+#'@title Fetches Models from Modules in the App
+#'@description  Loops through each specified module ID or all modules if no ID
+#'was specified. For each ID, an attempt will be made to extract any models
+#'available.
+#'@param state Current module state after yaml file has been read
+#'@param session Shiny session variable
+#'@param ids  Vector of ID strings for the modules containing models or
+#'NULL for all modules with models available.
+#'@return list containing the current dataset with the following format:
+#' JMH
+#' \itemize{
+#'   \item{isgood:} Boolean indicating the whether a dataset was found
+#'   (\code{FALSE})
+#'   \item{catalog:} Dataframe containing the a tabular catalog of the
+#'   models found.
+#'   \itemize{
+#'     \item{label:} Text label
+#'   }
+#'   \item{modules:} List with an entry for each module..
+#' }
+#'@examples
+#' # We need a module state and a Shiny session variable
+#' # to use this function:
+#' id="UD"
+#' sess_res = UD_test_mksession(session=list(), id=id)
+#' session = sess_res$session
+#' state   = sess_res$state
+#' mdl = FM_fetch_mdl(state, session)
+#' mdl$catalog
+FM_fetch_mdl = function(state, session, ids=NULL){
+}
+
+#'@export
+#'@title Fetches Datasets from Modules in the App
 #'@description  Loops through each specified module ID or all modules if no ID
 #'was specified. For each ID, an attempt will be made to extract any datasets
 #'available.
@@ -342,7 +375,7 @@ fetch_hold = function(state, inputId=NULL){
 hold_status}
 
 #'@export
-#'@title Fetches the code to reproduce analysis
+#'@title Fetches the Code to Reproduce Analysis
 #'@description Takes the current state of the app and builds a script to
 #'reproduce the analysis within the app.
 #'@param session Shiny session variable
@@ -463,7 +496,7 @@ FM_fetch_app_code = function(session, state, mod_ids){
 res}
 
 #'@export
-#'@title Fetches the path to the log file
+#'@title Fetches the Path to the Log File
 #'@description Use this to get the path to the formods log file
 #'@param state module state after yaml read
 #'@return Character string with the path to the log file.
@@ -491,8 +524,8 @@ FM_fetch_log_path = function(state){
 res}
 
 #'@export
-#'@title Fetches the path to the user files
-#'@description Use this to get the path to the formods log file
+#'@title Fetches the Path to the User Files
+#'@description Use this to get the path to the temporary directory where formods stores user files.
 #'@param state module state after yaml read
 #'@return Character string with the path to the log file.
 #'@examples
@@ -524,8 +557,9 @@ FM_fetch_user_files_path = function(state){
 user_dir}
 
 #'@export
-#'@title Appends entry to log file
-#'@description Add the supplied txt and the module type to the log file
+#'@title Adds Message to Log File and Displays it to the Console
+#'@description Add the supplied txt and the module type to the log file and
+#'display it to the console.
 #'@param state Module state after yaml read
 #'@param entry Text to add
 #'@param escape_braces Set to \code{TRUE} (default) to escape curly braces in the entry, set to \code{FALSE} to have the values interpreted.
@@ -566,34 +600,37 @@ FM_le = function(state, entry, escape_braces=TRUE, entry_type="alert"){
   # Writing messages to the console
   if(state[["yaml"]][["FM"]][["logging"]][["console"]]){
     for(line in entry){
+      FM_message(line=line,
+                 escape_braces=escape_braces, 
+                 entry_type=entry_type) 
       # This will conditionally show the entry if the cli packages is present:
-      if(system.file(package="cli") != ""){
-        if(escape_braces){
-          if(entry_type=="alert"){
-            cli::cli_alert("{line}") }
-          if(entry_type=="danger"){
-            cli::cli_alert_danger("{line}") }
-          if(entry_type=="warning"){
-            cli::cli_alert_warning("{line}") }
-          if(entry_type=="info"){
-            cli::cli_alert_info("{line}") }
-          if(entry_type=="success"){
-            cli::cli_alert_success("{line}") }
-        } else {
-          if(entry_type=="alert"){
-            cli::cli_alert(line)}
-          if(entry_type=="danger"){
-            cli::cli_alert_danger(line)}
-          if(entry_type=="warning"){
-            cli::cli_alert_warning(line)}
-          if(entry_type=="info"){
-            cli::cli_alert_info(line)}
-          if(entry_type=="success"){
-            cli::cli_alert_success(line)}
-        }
-      } else {
-        message(line)
-      }
+     #if(system.file(package="cli") != ""){
+     #  if(escape_braces){
+     #    if(entry_type=="alert"){
+     #      cli::cli_alert("{line}") }
+     #    if(entry_type=="danger"){
+     #      cli::cli_alert_danger("{line}") }
+     #    if(entry_type=="warning"){
+     #      cli::cli_alert_warning("{line}") }
+     #    if(entry_type=="info"){
+     #      cli::cli_alert_info("{line}") }
+     #    if(entry_type=="success"){
+     #      cli::cli_alert_success("{line}") }
+     #  } else {
+     #    if(entry_type=="alert"){
+     #      cli::cli_alert(line)}
+     #    if(entry_type=="danger"){
+     #      cli::cli_alert_danger(line)}
+     #    if(entry_type=="warning"){
+     #      cli::cli_alert_warning(line)}
+     #    if(entry_type=="info"){
+     #      cli::cli_alert_info(line)}
+     #    if(entry_type=="success"){
+     #      cli::cli_alert_success(line)}
+     #  }
+     #} else {
+     #  message(line)
+     #}
     }
   }
 
@@ -610,7 +647,49 @@ FM_le = function(state, entry, escape_braces=TRUE, entry_type="alert"){
 
 isgood}
 
-
+#'@export
+#'@title Show Message to User
+#'@description Writes a message to the console depending on whether cli is
+#'installed or not.
+#'@param line  Text to display
+#'@param escape_braces Set to \code{TRUE} (default) to escape curly braces in the entry, set to \code{FALSE} to have the values interpreted.
+#'@param entry_type  Set to either "alert"(default), "danger", "info", "success", or "warning"
+#'@return Returns NULL
+#'@examples
+#' mr = FM_message("This is a normal  message")
+#' mr = FM_message("This is a danger  message", entry_type="danger")
+#' mr = FM_message("This is a info    message", entry_type="info")
+#' mr = FM_message("This is a success message", entry_type="success")
+#' mr = FM_message("This is a warning message", entry_type="warning")
+FM_message = function(line, escape_braces=TRUE, entry_type="alert"){
+  if(system.file(package="cli") != ""){
+    if(escape_braces){
+      if(entry_type=="alert"){
+        cli::cli_alert("{line}") }
+      if(entry_type=="danger"){
+        cli::cli_alert_danger("{line}") }
+      if(entry_type=="warning"){
+        cli::cli_alert_warning("{line}") }
+      if(entry_type=="info"){
+        cli::cli_alert_info("{line}") }
+      if(entry_type=="success"){
+        cli::cli_alert_success("{line}") }
+    } else {
+      if(entry_type=="alert"){
+        cli::cli_alert(line)}
+      if(entry_type=="danger"){
+        cli::cli_alert_danger(line)}
+      if(entry_type=="warning"){
+        cli::cli_alert_warning(line)}
+      if(entry_type=="info"){
+        cli::cli_alert_info(line)}
+      if(entry_type=="success"){
+        cli::cli_alert_success(line)}
+    }
+  } else {
+    message(line)
+  }
+NULL}
 
 #'@export
 #'@title Run Try/Catch and Process Results
@@ -749,7 +828,7 @@ session}
 #'@param app_state Loaded app state.
 #'@param set_holds If TRUE (default) the holds will be set for all of the
 #' modules present in the app state.
-#'@return No return value, just updates the app state in the session variable. 
+#'@return No return value, just updates the app state in the session variable.
 #'@examples
 #' # We need a Shiny session object to use this function:
 #' id="UD"
@@ -830,13 +909,15 @@ FM_set_app_state <- function(session, app_state, set_holds = TRUE){
       }
     }
   } else {
-    if(system.file(package="cli") != ""){
-      cli::cli_alert("FM_set_app_state()")
-      cli::cli_alert("Unable to find ASM state.")
-    } else {
-      message("FM_set_app_state()")
-      message("Unable to find ASM state.")
-    }
+    FM_message(line="FM_set_app_state()")
+    FM_message(line="Unable to find ASM state.")
+   #if(system.file(package="cli") != ""){
+   #  cli::cli_alert("FM_set_app_state()")
+   #  cli::cli_alert("Unable to find ASM state.")
+   #} else {
+   #  message("FM_set_app_state()")
+   #  message("Unable to find ASM state.")
+   #}
   }
 
 
@@ -854,9 +935,13 @@ NULL}
 #'@param session Shiny session variable.
 #'@return List with information about the app with the following structure
 #' \itemize{
-#'   \item{uiele:} System information as UI elements to be used in shiny apps.
+#'   \item{uiele:} All system information as UI elements to be used in shiny apps.
+#'   \item{uiele_packages:} UI element for installed packages to be used in shiny apps.
+#'   \item{uiele_options:}  UI element for current options.
+#'   \item{uiele_modules: } UI element for loaded formods modules to be used in shiny apps.
 #'   \item{msgs:}  System information as text to be used in a report/terminal.
-#'   \item{si_paclages} Dataframe with currently used packages.
+#'   \item{si_packages} Dataframe with currently used packages.
+#'   \item{si_options} Dataframe with current options
 #' }
 #'@examples
 #' # We need a Shiny session object to use this function:
@@ -864,11 +949,13 @@ NULL}
 #' sess_res = UD_test_mksession(session=list(), id=id)
 #' session = sess_res$session
 #' app_info  = FM_fetch_app_info(session)
-#' app_info$msgs 
+#' app_info$msgs
 FM_fetch_app_info <- function(session){
-  msgs        = c()
-  uiele       = NULL
-  si_packages = NULL
+  msgs            = c()
+  uiele           = NULL
+  uiele_packages  = NULL
+  uiele_modules   = NULL
+  si_packages     = NULL
 
   # The devtools package is needed for some information we want to find out if
   # it's here and create a message if it's not
@@ -905,53 +992,94 @@ FM_fetch_app_info <- function(session){
 
     if(!is.null(state)){
       tmp_msg = paste0("ID: ",state[["id"]])
-      uiele   = tagList(uiele, tags$h4(tmp_msg))
+      uiele_modules   = tagList(uiele_modules, tags$h4(tmp_msg))
       msgs    = c(msgs, tmp_msg)
-      
+
       tmp_msg = paste0("type: ",state[["MOD_TYPE"]])
-      uiele   = tagList(uiele,tags$ul(tags$li(tmp_msg)))
+      uiele_modules   = tagList(uiele_modules,tags$ul(tags$li(tmp_msg)))
       msgs    = c(msgs, tmp_msg)
-      
+
       tmp_msg = paste0("FM_yaml_file: ",state[["FM_yaml_file"]])
-      uiele   = tagList(uiele,tags$ul(tags$li(tmp_msg)))
+      uiele_modules   = tagList(uiele_modules,tags$ul(tags$li(tmp_msg)))
       msgs    = c(msgs, tmp_msg)
-      
+
       tmp_msg = paste0("MOD_yaml_file: ",state[["MOD_yaml_file"]])
-      uiele   = tagList(uiele,tags$ul(tags$li(tmp_msg)))
+      uiele_modules   = tagList(uiele_modules,tags$ul(tags$li(tmp_msg)))
       msgs    = c(msgs, tmp_msg)
 
       tmp_msg = paste0("User files: ",FM_fetch_user_files_path(state))
-      uiele   = tagList(uiele,tags$ul(tags$li(tmp_msg)))
+      uiele_modules   = tagList(uiele_modules,tags$ul(tags$li(tmp_msg)))
       msgs    = c(msgs, tmp_msg)
 
       tmp_msg = paste0("Log file: ",FM_fetch_log_path(state))
-      uiele   = tagList(uiele,tags$ul(tags$li(tmp_msg)))
+      uiele_modules   = tagList(uiele_modules,tags$ul(tags$li(tmp_msg)))
       msgs    = c(msgs, tmp_msg)
-      
+
       # Finding the package dependencies of the current module
       deps = FM_fetch_deps(state=state, session=session )
       if(length(deps[["packages"]]) > 0){
         tmp_msg = paste0("Package dependencies: ", paste0(deps[["packages"]], collapse=', '))
-        uiele   = tagList(uiele,tags$ul(tags$li(tmp_msg)))
+        uiele_modules   = tagList(uiele_modules,tags$ul(tags$li(tmp_msg)))
         msgs    = c(msgs, tmp_msg)
       }
     }
   }
+
+  uiele = tagList(uiele, uiele_modules)
 
   if(found_devtools){
     si          =  devtools::session_info()
     si_packages = si$packages
     msgs = c(msgs, as.character(si_packages))
     if(found_DT){
-      uiele = tagList(uiele, tags$h3("Packages"))
-      uiele   = tagList(uiele,DT::datatable(si_packages))
+      uiele            = tagList(uiele, tags$h3("Packages"))
+      uiele            = tagList(uiele,DT::datatable(si_packages))
+      uiele_packages   = DT::datatable(si_packages)
     }
   }
 
+  si_opt_list   = options()
+  si_options    = NULL
+  uiele_options = NULL
+  for(oname in names(si_opt_list)){
 
-  res = list(uiele       = uiele,
-             msgs        = msgs,
-             si_packages = si_packages)
+    value  = deparse(si_opt_list[[oname]])
+    value  = paste0(value, collapse = "\n")
+    si_options  =
+      rbind(si_options,
+        data.frame(option = oname,
+                   value  = value ))
+  }
+
+
+  if(found_DT){
+    tmp_si_options = si_options
+    tmp_si_options[["value"]] = str_replace_all(
+      tmp_si_options[["value"]], 
+      pattern     = "\n", 
+      replacement = "<BR/>")
+    tmp_si_options[["value"]] = str_replace_all(
+      tmp_si_options[["value"]], 
+      pattern = " ", 
+      replacement = "&nbsp;")
+    tmp_si_options[["value"]] = paste0(
+      "<TT>",
+      tmp_si_options[["value"]], 
+      "<TT>" ) 
+    tmp_si_options[["option"]] = paste0(
+      "<TT>",
+      tmp_si_options[["option"]], 
+      "<TT>" ) 
+    uiele_options = DT::datatable(tmp_si_options, escape=FALSE)
+  }
+
+  res = list(uiele          = uiele,
+             uiele_packages = uiele_packages,
+             uiele_modules  = uiele_modules ,
+             uiele_options  = uiele_options ,
+             msgs           = msgs,
+             si_options     = si_options,
+             si_packages    = si_packages)
 
 res}
 
@@ -984,7 +1112,7 @@ app_state}
 #'@param dep_mod_ids Vector of module ids this module depends on.
 #'@param MT Type of module using the short name (e.g. "UD", "FG", etc.).
 #'@param button_counters Vector of button UI elements that need to be tracked.
-#'@param ui_ids List of UI ids in the model.
+#'@param ui_ids List of UI ids in the module.
 #'@param ui_hold Vector of UI elements that require holding.
 #'@param session Shiny session variable
 #'@return List with state initialized.
@@ -1075,7 +1203,7 @@ state}
 #'with this function.
 #'@param state formods State object.
 #'@param session Shiny session variable.
-#'@return No return value, sets message in supplied session variable. 
+#'@return No return value, sets message in supplied session variable.
 #'@examples
 #' # We need a module state object to use this function:
 #' id="UD"
@@ -2058,4 +2186,168 @@ fetch_package_version = function(pkgname){
              version      = version)
 res}
 
+#'@export
+#'@title Determines if a Package is Installed
+#'@description Determines if the specified package is installed.
+#'@param pkgname Name of package
+#'@return Logical indicating if the packages is installed or not
+#'@examples
+#' # This package should exist
+#' is_installed('digest')
+#'
+#' # This package should not exist
+#' is_installed('bad package name')
+is_installed = function(pkgname){
 
+  res = TRUE
+  if(system.file(package = pkgname) == ""){
+    res = FALSE
+  }
+
+res}
+
+#'@export
+#'@title Makes Template Files for formods New Module
+#'@description If you want to create a new formods module this function will
+#'create the template files for you.
+#'@param SN   Module short name
+#'@param Module_Name  Module long name
+#'@param package Name of package that will contain the module
+#'@param element What you would call the thing the module provides for example
+#'the FG module provides "figures", the DW module provides "data views".
+#'@param file_dir Directory to save file
+#'@return list with the following elements:
+#' \itemize{
+#' \item{mc:}     Module components.
+#' \item{server:} Server.R file.
+#' \item{yaml:}   Yaml configureation file.
+#' }
+#' Each of these is a list with paths to the respective files:
+#' \itemize{
+#' \item{source:}     Template source.
+#' \item{dest:}       Destination file name.
+#' \item{dest_full:}  Full path to the destination file name.
+#' }
+#'@examples
+#' new_module_template()
+#'
+new_module_template = function(
+  SN          = "NM",
+  Module_Name = "New Module",
+  package     = "pkgname",
+  element     = "analysis",
+  file_dir    = tempdir()){
+
+  # Source and destination files:
+  mod_files = list(
+    mc     = list(source = system.file(package="formods", "templates", "ZZ_module_components.R"),
+                  dest   = paste0(SN, "_module_components.R")),
+    server = list(source = system.file(package="formods", "templates", "ZZ_Server.R"),
+                  dest   = paste0(SN, "_Server.R")),
+    yaml   = list(source = system.file(package="formods", "templates", "ZZ.yaml"),
+                  dest   = paste0(SN, ".yaml"))
+  )
+
+  # Placeholder substitutions
+  ph_subs = list(
+    ZZ      = SN,
+    zz      = tolower(SN),
+    ZZ_NAME = Module_Name,
+    ELEMENT = element,
+    PKG     = package  )
+
+
+
+  # We walk through each file
+  for(mod_file in names(mod_files)){
+    # Reads the contents of the source file into a character vector:
+    source  = mod_files[[mod_file]][["source"]]
+    lines   = readLines(source)
+
+    # This will apply all the substituations listed above:
+    for(ph_sub   in names(ph_subs)){
+      st_find    = paste0("===", ph_sub,"===")
+      st_replace = ph_subs[[ph_sub]]
+
+      lines = stringr::str_replace_all(lines, st_find,  st_replace)
+    }
+
+    dest          = mod_files[[mod_file]][["dest"]]
+    dest_full     = file.path(file_dir, dest)
+    mod_files[[mod_file]][["dest_full"]] = dest_full
+
+    # This should save the new templates with the substitutions applied:
+    write(lines, file=dest_full, append=FALSE)
+  }
+mod_files}
+
+
+
+#'@export
+#'@title Create Module Templates in a Package Repository
+#'@description If you are developing a package within a repository (i.e. git)
+#'and want to create a new formods module this function will
+#'create the template files for you and install them in the correct location.
+#'@param SN   Module short name
+#'@param Module_Name  Module long name
+#'@param package Name of package that will contain the module
+#'@param element What you would call the thing the module provides for example
+#'the FG module provides "figures", the DW module provides "data views"
+#'@param overwrite Boolean to indicate if you should overwrite files
+#'@param repo_root Root of the repository.
+#'@return Same as the return value for new_module_template()
+#'@examples
+#' if(FALSE){
+#'   use_formods(repo_root=tempdir())
+#' }
+use_formods = function(
+  SN          = "NM",
+  Module_Name = "New Module",
+  package     = "pkgname",
+  element     = "analysis",
+  overwrite   = FALSE,
+  repo_root   = NULL){
+
+
+  if(is.null(repo_root)){
+    if(system.file(package="here") == ""){
+      message("The repo_root is not specified and the here package is not installed.")
+      message("You need to either specify the repo_root or install the hear package.")
+      stop("use_formod()")
+     } else{
+       repo_root = here::here()
+    }
+  }
+
+  # Making sure the installation directories exist
+  R_dir        = file.path(repo_root, "R")
+  if(!dir.exists(R_dir)){
+    dir.create(R_dir, recursive=TRUE)
+  }
+  template_dir = file.path(repo_root, "inst", "templates")
+  if(!dir.exists(template_dir)){
+    dir.create(template_dir, recursive=TRUE)
+  }
+
+
+  # Creating the new template files in the temp directory
+  nmr = new_module_template(
+          SN          = SN,
+          Module_Name = Module_Name,
+          package  = package,
+          element  = element,
+          file_dir = tempdir())
+
+  tmp_server = file.path(here::here(), "R", nmr[["server"]][["dest"]])
+  tmp_yaml   = file.path(here::here(), "inst", "templates", nmr[["yaml"]][["dest"]])
+  tmp_mc     = file.path(here::here(), "inst", "templates", nmr[["mc"]][["dest"]])
+
+  message("Creating module files:")
+  message(paste0(" - ", tmp_server))
+  message(paste0(" - ", tmp_yaml))
+  message(paste0(" - ", tmp_mc))
+
+  file.copy(from = nmr[["server"]][["dest_full"]], to = tmp_server, overwrite =  overwrite)
+  file.copy(from = nmr[["yaml"]][["dest_full"]],   to = tmp_yaml,   overwrite =  overwrite)
+  file.copy(from = nmr[["mc"]][["dest_full"]],     to = tmp_mc,     overwrite =  overwrite)
+nmr}

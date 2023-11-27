@@ -12,9 +12,13 @@ FM_fetch_app_info(session)
 \value{
 List with information about the app with the following structure
 \itemize{
-  \item{uiele:} System information as UI elements to be used in shiny apps.
+  \item{uiele:} All system information as UI elements to be used in shiny apps.
+  \item{uiele_packages:} UI element for installed packages to be used in shiny apps.
+  \item{uiele_options:}  UI element for current options.
+  \item{uiele_modules: } UI element for loaded formods modules to be used in shiny apps.
   \item{msgs:}  System information as text to be used in a report/terminal.
-  \item{si_paclages} Dataframe with currently used packages.
+  \item{si_packages} Dataframe with currently used packages.
+  \item{si_options} Dataframe with current options
 }
 }
 \description{
@@ -26,5 +30,5 @@ id="UD"
 sess_res = UD_test_mksession(session=list(), id=id)
 session = sess_res$session
 app_info  = FM_fetch_app_info(session)
-app_info$msgs 
+app_info$msgs
 }

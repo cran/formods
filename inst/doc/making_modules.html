@@ -1838,49 +1838,63 @@ Wrangling</a></li>
 Generation</a></li>
 <li>FM - <a href="https://formods.ubiquity.tools">Formods</a></li>
 <li>UD - <a href="https://formods.ubiquity.tools">Upload Data</a></li>
+<li>MC - This is a reserved word</li>
 </ul>
-<p>The current modules are in development:</p>
+<p>The current modules in development:</p>
 <ul>
 <li>NCA - <a href="https://github.com/john-harrold/ruminate">Non-Compartmental
 Analysis</a></li>
+<li>MB - <a href="https://github.com/john-harrold/ruminate">Model
+Builder</a></li>
 </ul>
 </div>
 </div>
 <div id="formods-framework" class="section level1">
 <h1>formods framework</h1>
-<p>To get started you can make a copy of some example files:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.copy</span>(<span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;formods&quot;</span>, <span class="st">&quot;templates&quot;</span>, <span class="st">&quot;ZZ_module_components.R&quot;</span>), <span class="st">&quot;ZZ_module_components.R&quot;</span>)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">file.copy</span>(<span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;formods&quot;</span>, <span class="st">&quot;templates&quot;</span>, <span class="st">&quot;ZZ_Server.R&quot;</span>), <span class="st">&quot;ZZ_Server.R&quot;</span>)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">file.copy</span>(<span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;formods&quot;</span>, <span class="st">&quot;templates&quot;</span>, <span class="st">&quot;ZZ.yaml&quot;</span>), <span class="st">&quot;ZZ.yaml&quot;</span>)</span></code></pre></div>
+<p>To get started you need to create some template files. The example
+below assumes you are creating this module for a package called
+<code>mypackage</code> and that you are running this command in a git
+repository. Say that this module is used to produce
+<code>widgets</code>, the short name is <code>MM</code> which stands for
+<code>My Module</code>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">use_formods</span>(<span class="at">SN          =</span> <span class="st">&quot;MM&quot;</span>,</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">Module_Name =</span> <span class="st">&quot;My Module&quot;</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">element     =</span> <span class="st">&quot;widgets&quot;</span>, </span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">package     =</span> <span class="st">&quot;mypackage&quot;</span>)</span></code></pre></div>
 <ul>
-<li><code>ZZ_module_components.R</code> - An app that can be used for
+<li><code>MM_module_components.R</code> - An app that can be used for
 testing the module and highlighting the different UI elements that are
-used within the module.</li>
-<li><code>ZZ_Server.R</code>: A bare bones file containing the expected
-functions and their minimal inputs.</li>
-<li><code>ZZ.yaml</code>: This module configuration file contains the
+used within the module (found in <code>inst/templates</code>).</li>
+<li><code>MM_Server.R</code>: A bare bones file containing the expected
+functions and their minimal inputs. (found in <code>R</code>).</li>
+<li><code>MM.yaml</code>: This module configuration file contains the
 the minimal elements expected, but you can add your own fields to suit
-your modules needs.</li>
+your modules needs (found in <code>inst/templates</code>).</li>
 </ul>
-<p>You can rename the <code>ZZ</code> portion of the files with the
-module short name you’re using. The <code>ZZ_Server.R</code> would go in
-the <code>R</code> directory in your package and the other two files
-would go into <code>inst/templates</code>.</p>
 </div>
 <div id="expected-functions" class="section level1">
 <h1>Expected functions</h1>
-<p>For the module to work and interact with other modules, there are
-certain funcitons that are expected.</p>
+<p>The module template will create a standard set of functions for you.
+The <code>MM</code> below will be replaced with whatever short name you
+choose above when you create the templates. These functions can be
+customized for your specific module. Some are optional and can be
+deleted. For example the <code>MM_fetch_ds</code> function is only
+needed if your module creates datasets and provides them for other
+modules to use (like the <code>DW</code> module exports data views to be
+used by other modules). The modules are designed to create
+<strong>elements</strong>. For example the <code>DW</code> module
+creates data view elements, the <code>FG</code> module is used to create
+figure elements, etc.</p>
 <ul>
-<li><code>ZZ_Server</code> Shiny server function.</li>
-<li><code>ZZ_init_state</code> Creates an empty the formods state for
+<li><code>MM_Server</code> Shiny server function.</li>
+<li><code>MM_init_state</code> Creates an empty the formods state for
 the module.</li>
-<li><code>ZZ_fetch_state</code> Each module has a function to fetch the
+<li><code>MM_fetch_state</code> Each module has a function to fetch the
 state. Within this function there should be no interactivity. Any access
 of the elements to the Shiny input should be isolated. Based on
 differences between the input elements (current state of the app) and
 the stored app state can be used to trigger different things.</li>
-<li><code>ZZ_fetch_code</code> This takes as it’s first argument the
+<li><code>MM_fetch_code</code> This takes as it’s first argument the
 module state. When called with only this argument it should return a
 character object containing all of the code needed to generate the
 elements of this module represented in the app. You can assume that any
@@ -1890,9 +1904,10 @@ generating figures. It will be appended to the code from the
 <code>UD</code> and <code>DW</code> modules that define loading the
 dataset and creation of the data views. For modules where no code is
 generated (e.g. <code>ASM</code>) just return <code>NULL</code>.</li>
-<li><code>ZZ_append_report</code><br />
-</li>
-<li><code>ZZ_fetch_ds</code> If a module provides data sets to be used
+<li><code>MM_append_report</code> If a module generates reportable
+outputs, this function will be used to append those outputs to the
+overall reports generated by formods.</li>
+<li><code>MM_fetch_ds</code> If a module provides data sets to be used
 in other modules you need to create this function. It should return at
 least the following:
 <ul>
@@ -1915,7 +1930,7 @@ list with the following elements for each dataset:
 <li><code>DSchecksum</code> Dataset checksum.</li>
 </ul></li>
 </ul></li>
-<li><code>ZZ_test_mksession</code> When testing outside of Shiny it is
+<li><code>MM_test_mksession</code> When testing outside of Shiny it is
 useful to have a prepopulated session, intput, etc objects with actual
 data. Each module shoudl have a <code>test_mksession</code> function
 that populates these objects with useful data. If your module depends on
@@ -1935,12 +1950,25 @@ session initialization.</li>
 <li><code>state</code> App state.</li>
 <li><code>rsc</code> The <code>react_state</code> components.</li>
 </ul></li>
+<li><code>MM_new_element</code> Creates a new module element.</li>
+<li><code>MM_fetch_current_element</code> Extracts the current element
+from the state object.</li>
+<li><code>MM_set_current_element</code> Sets the current element to the
+provided value.</li>
+<li><code>MM_del_element</code> Deletes the current active element.</li>
 </ul>
 </div>
-<div id="expected-ui-elements" class="section level1">
-<h1>Expected UI elements</h1>
+<div id="expected-ui-components" class="section level1">
+<h1>Expected UI components</h1>
 <ul>
-<li><code>ui_zz_compact</code></li>
+<li><code>ui_mm_compact</code> This is a UI output that contains a
+compact view of your module that can be called from the main ui
+functions for the App. It is composed of the individual UI elements that
+are shown in the <code>MM_module_components.R</code> file. This allows
+the user a quick way to utilize a model (using the
+<code>ui_mm_compact</code>), and the ability to customize the module UI
+by manually arranging the pieces found in
+<code>MM_module_components.R</code>.</li>
 </ul>
 </div>
 <div id="module-interaction" class="section level1">
@@ -1953,10 +1981,10 @@ as tell your larger app that something has changed.</p>
 <h2>Module state and reacting to changes</h2>
 <p>Changes in module states are detected with the
 <code>react_state</code> object. For a given module of type
-<code>&quot;XX&quot;</code> with a module id of <code>&quot;ID&quot;</code> you would detect
+<code>&quot;MM&quot;</code> with a module id of <code>&quot;ID&quot;</code> you would detect
 changes by reacting to <code>react_state[[&quot;ID&quot;]]</code> and looking for
 changes in the checksum element below:</p>
-<p><code>react_state[[&quot;ID&quot;]][[&quot;XX&quot;]][[&quot;checksum&quot;]]</code></p>
+<p><code>react_state[[&quot;ID&quot;]][[&quot;MM&quot;]][[&quot;checksum&quot;]]</code></p>
 <ul>
 <li><code>checksum</code> A checksum that can be used to detect changes
 in this module. For example in the UD module this will change if the
@@ -2059,7 +2087,7 @@ below):</p>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">observeEvent</span>(<span class="fu">remove_hold_listen</span>(), {</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Once the UI has been regenerated we</span></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># remove any holds for this module</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  state <span class="ot">=</span> <span class="fu">XX_fetch_state</span>(<span class="at">id              =</span> id,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  state <span class="ot">=</span> <span class="fu">MM_fetch_state</span>(<span class="at">id              =</span> id,</span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>                         <span class="at">input           =</span> input,</span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>                         <span class="at">session         =</span> session,</span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>                         <span class="at">FM_yaml_file    =</span> FM_yaml_file,</span>
@@ -2068,15 +2096,18 @@ below):</p>
 <span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">FM_le</span>(state, <span class="st">&quot;removing holds&quot;</span>)</span>
 <span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Removing all holds</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(hname <span class="cf">in</span> <span class="fu">names</span>(state[[<span class="st">&quot;XX&quot;</span>]][[<span class="st">&quot;ui_hold&quot;</span>]])){</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(hname <span class="cf">in</span> <span class="fu">names</span>(state[[<span class="st">&quot;MM&quot;</span>]][[<span class="st">&quot;ui_hold&quot;</span>]])){</span>
 <span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">remove_hold</span>(state, session, hname)</span>
 <span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>}, <span class="at">priority =</span> <span class="sc">-</span><span class="dv">100</span>)</span></code></pre></div>
 <p>The <code>remove_hold_listen</code> object should contain all of the
-inputs that are… holdable?</p>
+inputs that create holds.</p>
 </div>
 <div id="dataframe-formatting-information" class="section level2">
 <h2>Dataframe formatting information</h2>
+<p>If you want to tables and pulldown menues based on the types of data
+in each column you can use the <code>FM_fetch_data_format()</code>
+function.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>hfmt <span class="ot">=</span> <span class="fu">FM_fetch_data_format</span>(df, state)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Descriptive headers </span></span>
@@ -2101,8 +2132,8 @@ package.</p>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">colHeaders =</span> <span class="fu">as.vector</span>(<span class="fu">unlist</span>(hfmt[[<span class="st">&quot;col_heads&quot;</span>]])),</span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">rowHeaders =</span> <span class="cn">NULL</span></span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
-<div id="htmlwidget-7bf11217e5ab7b5b62d9" style="width:100%;height:100%;" class="rhandsontable html-widget "></div>
-<script type="application/json" data-for="htmlwidget-7bf11217e5ab7b5b62d9">{"x":{"data":[{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":3000000,"DV":0,"RECDESC":"dose","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"Ac","DUR":0,"EVID":1,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":0,"DV":1250,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":0,"DV":0,"RECDESC":"C_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"C_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":1,"TIME_HR":24,"NTIME_DY":1,"NTIME_HR":24,"TIME":24,"AMT":0,"DV":1647,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":1,"TIME_HR":24,"NTIME_DY":1,"NTIME_HR":24,"TIME":24,"AMT":0,"DV":690.5,"RECDESC":"C_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"C_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":2,"TIME_HR":48,"NTIME_DY":2,"NTIME_HR":48,"TIME":48,"AMT":0,"DV":1947,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1}],"rClass":["tbl_df","tbl","data.frame"],"rColClasses":{"ID":"numeric","TIME_DY":"numeric","TIME_HR":"numeric","NTIME_DY":"numeric","NTIME_HR":"numeric","TIME":"numeric","AMT":"numeric","DV":"numeric","RECDESC":"character","DOSE":"numeric","DOSE_STR":"character","Cohort":"character","ROUTE":"character","WT":"numeric","SUBTYPE":"character","SEX":"character","F1":"numeric","ka":"numeric","CL":"numeric","Vc":"numeric","Vp":"numeric","Q":"numeric","BM_IC":"numeric","kdeg_BM":"numeric","Emax":"numeric","EC50":"numeric","CMT":"character","DUR":"numeric","EVID":"numeric","NDose":"character","DOSE_NUM":"numeric","SUBTYPE_ID":"numeric","SEX_ID":"numeric"},"rColnames":["ID","TIME_DY","TIME_HR","NTIME_DY","NTIME_HR","TIME","AMT","DV","RECDESC","DOSE","DOSE_STR","Cohort","ROUTE","WT","SUBTYPE","SEX","F1","ka","CL","Vc","Vp","Q","BM_IC","kdeg_BM","Emax","EC50","CMT","DUR","EVID","NDose","DOSE_NUM","SUBTYPE_ID","SEX_ID"],"rColHeaders":["ID","TIME_DY","TIME_HR","NTIME_DY","NTIME_HR","TIME","AMT","DV","RECDESC","DOSE","DOSE_STR","Cohort","ROUTE","WT","SUBTYPE","SEX","F1","ka","CL","Vc","Vp","Q","BM_IC","kdeg_BM","Emax","EC50","CMT","DUR","EVID","NDose","DOSE_NUM","SUBTYPE_ID","SEX_ID"],"rRowHeaders":null,"rDataDim":[6,33],"selectCallback":false,"colHeaders":["<span style='color:#3C8DBC'><b>ID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME_DY<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME_HR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>NTIME_DY<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>NTIME_HR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>AMT<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>DV<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>RECDESC<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DOSE<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>DOSE_STR<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>Cohort<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>ROUTE<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>WT<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>SUBTYPE<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>SEX<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>F1<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>ka<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>CL<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Vc<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Vp<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Q<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>BM_IC<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>kdeg_BM<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Emax<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>EC50<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>CMT<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DUR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>EVID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>NDose<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DOSE_NUM<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>SUBTYPE_ID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>SEX_ID<\/b><br/><font size='-3'>num<\/font><\/span>"],"rowHeaders":null,"columns":[{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null}],"width":"100%","height":"100%","debug":0,"search":false,"stretchH":"none","comments":false,"contextMenu":{"items":{"row_above":[],"row_below":[],"remove_row":[],"hsep3":{"name":"---------"},"undo":[],"redo":[],"hsep4":{"name":"---------"},"alignment":[]}}},"evals":["columns.0.renderer","columns.1.renderer","columns.2.renderer","columns.3.renderer","columns.4.renderer","columns.5.renderer","columns.6.renderer","columns.7.renderer","columns.8.renderer","columns.9.renderer","columns.10.renderer","columns.11.renderer","columns.12.renderer","columns.13.renderer","columns.14.renderer","columns.15.renderer","columns.16.renderer","columns.17.renderer","columns.18.renderer","columns.19.renderer","columns.20.renderer","columns.21.renderer","columns.22.renderer","columns.23.renderer","columns.24.renderer","columns.25.renderer","columns.26.renderer","columns.27.renderer","columns.28.renderer","columns.29.renderer","columns.30.renderer","columns.31.renderer","columns.32.renderer"],"jsHooks":[]}</script>
+<div id="htmlwidget-734587c2aadf3407203d" style="width:100%;height:100%;" class="rhandsontable html-widget "></div>
+<script type="application/json" data-for="htmlwidget-734587c2aadf3407203d">{"x":{"data":[{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":3000000,"DV":0,"RECDESC":"dose","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"Ac","DUR":0,"EVID":1,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":0,"DV":1250,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":0,"DV":0,"RECDESC":"C_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"C_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":1,"TIME_HR":24,"NTIME_DY":1,"NTIME_HR":24,"TIME":24,"AMT":0,"DV":1647,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":1,"TIME_HR":24,"NTIME_DY":1,"NTIME_HR":24,"TIME":24,"AMT":0,"DV":690.5,"RECDESC":"C_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"C_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":2,"TIME_HR":48,"NTIME_DY":2,"NTIME_HR":48,"TIME":48,"AMT":0,"DV":1947,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1}],"rClass":["tbl_df","tbl","data.frame"],"rColClasses":{"ID":"numeric","TIME_DY":"numeric","TIME_HR":"numeric","NTIME_DY":"numeric","NTIME_HR":"numeric","TIME":"numeric","AMT":"numeric","DV":"numeric","RECDESC":"character","DOSE":"numeric","DOSE_STR":"character","Cohort":"character","ROUTE":"character","WT":"numeric","SUBTYPE":"character","SEX":"character","F1":"numeric","ka":"numeric","CL":"numeric","Vc":"numeric","Vp":"numeric","Q":"numeric","BM_IC":"numeric","kdeg_BM":"numeric","Emax":"numeric","EC50":"numeric","CMT":"character","DUR":"numeric","EVID":"numeric","NDose":"character","DOSE_NUM":"numeric","SUBTYPE_ID":"numeric","SEX_ID":"numeric"},"rColnames":["ID","TIME_DY","TIME_HR","NTIME_DY","NTIME_HR","TIME","AMT","DV","RECDESC","DOSE","DOSE_STR","Cohort","ROUTE","WT","SUBTYPE","SEX","F1","ka","CL","Vc","Vp","Q","BM_IC","kdeg_BM","Emax","EC50","CMT","DUR","EVID","NDose","DOSE_NUM","SUBTYPE_ID","SEX_ID"],"rColHeaders":["ID","TIME_DY","TIME_HR","NTIME_DY","NTIME_HR","TIME","AMT","DV","RECDESC","DOSE","DOSE_STR","Cohort","ROUTE","WT","SUBTYPE","SEX","F1","ka","CL","Vc","Vp","Q","BM_IC","kdeg_BM","Emax","EC50","CMT","DUR","EVID","NDose","DOSE_NUM","SUBTYPE_ID","SEX_ID"],"rRowHeaders":null,"rDataDim":[6,33],"selectCallback":false,"colHeaders":["<span style='color:#3C8DBC'><b>ID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME_DY<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME_HR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>NTIME_DY<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>NTIME_HR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>AMT<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>DV<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>RECDESC<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DOSE<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>DOSE_STR<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>Cohort<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>ROUTE<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>WT<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>SUBTYPE<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>SEX<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>F1<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>ka<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>CL<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Vc<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Vp<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Q<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>BM_IC<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>kdeg_BM<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Emax<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>EC50<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>CMT<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DUR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>EVID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>NDose<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DOSE_NUM<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>SUBTYPE_ID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>SEX_ID<\/b><br/><font size='-3'>num<\/font><\/span>"],"rowHeaders":null,"columns":[{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null}],"width":"100%","height":"100%","debug":0,"search":false,"stretchH":"none","comments":false,"contextMenu":{"items":{"row_above":[],"row_below":[],"remove_row":[],"hsep3":{"name":"---------"},"undo":[],"redo":[],"hsep4":{"name":"---------"},"alignment":[]}}},"evals":["columns.0.renderer","columns.1.renderer","columns.2.renderer","columns.3.renderer","columns.4.renderer","columns.5.renderer","columns.6.renderer","columns.7.renderer","columns.8.renderer","columns.9.renderer","columns.10.renderer","columns.11.renderer","columns.12.renderer","columns.13.renderer","columns.14.renderer","columns.15.renderer","columns.16.renderer","columns.17.renderer","columns.18.renderer","columns.19.renderer","columns.20.renderer","columns.21.renderer","columns.22.renderer","columns.23.renderer","columns.24.renderer","columns.25.renderer","columns.26.renderer","columns.27.renderer","columns.28.renderer","columns.29.renderer","columns.30.renderer","columns.31.renderer","columns.32.renderer"],"jsHooks":[]}</script>
 <p>To add subtext to a selection widget in Shiny you need to use the
 <code>{shinyWidgets}</code> package.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>sel_subtext <span class="ot">=</span> <span class="fu">as.vector</span>(<span class="fu">unlist</span>( hfmt[[<span class="st">&quot;col_subtext&quot;</span>]]))</span>
@@ -2141,7 +2172,7 @@ function for that molecule to get the state object with the
 notifications. Then <code>FM_notify()</code> will be called an any
 unprocessed notifications will be displayed:</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>    <span class="fu">observeEvent</span>(<span class="fu">toNotify</span>(), {</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>      state <span class="ot">=</span> <span class="fu">XX_fetch_state</span>(<span class="at">id              =</span> id,</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>      state <span class="ot">=</span> <span class="fu">MM_fetch_state</span>(<span class="at">id              =</span> id,</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">input           =</span> input,</span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                             <span class="at">session         =</span> session,</span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">FM_yaml_file    =</span> FM_yaml_file,</span>
@@ -2164,7 +2195,9 @@ you would do the following:</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>uiele <span class="ot">=</span> shiny<span class="sc">::</span><span class="fu">textInput</span>(</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>          <span class="at">inputId =</span> <span class="st">&quot;some_text&quot;</span>, </span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">label   =</span> <span class="st">&quot;You need to type harder!&quot;</span>)</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>uiele <span class="ot">=</span> <span class="fu">FM_add_ui_tooltip</span>(state, uiele)</span></code></pre></div>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>uiele <span class="ot">=</span> <span class="fu">FM_add_ui_tooltip</span>(state, uiele, </span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">tooltip  =</span> <span class="st">&quot;This is a tooltip&quot;</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">position =</span> <span class="st">&quot;left&quot;</span>)</span></code></pre></div>
 </div>
 <div id="pausing-the-screen" class="section level2">
 <h2>Pausing the screen</h2>
@@ -2184,7 +2217,7 @@ fields:</p>
 <ul>
 <li><code>yaml</code>- Contents of the formods configuration file.</li>
 <li><code>MC</code> - Contents of the module configuration file.</li>
-<li><code>XX</code> - XX here is the short name of the current module.
+<li><code>MM</code> - MM here is the short name of the current module.
 <code>MOD_TYPE</code> below), this is where you would store any app
 information. (see below).</li>
 <li><code>MOD_TYPE</code> - Short name of the module.</li>
@@ -2194,10 +2227,22 @@ information. (see below).</li>
 <li><code>notifications</code> - Contains notifications set by the user
 through <code>FM_set_notification()</code>.</li>
 </ul>
-<div id="app-information-in-xx" class="section level2">
-<h2>App information in XX</h2>
-<p>This field <code>state$XX</code> is relatively free form but there
-are some expected elements. JMH Add expected fields here.</p>
+<div id="app-information-in-mm" class="section level2">
+<h2>App information in MM</h2>
+<p>This field <code>state$MM</code> is relatively free form but there
+are some reserved elements. These reserved keyword are:</p>
+<ul>
+<li><code>button_counters</code> - Counter that tracks button
+clicks</li>
+<li><code>ui_hold</code> - List of hold elements that is populated with
+<code>set_hold()</code></li>
+<li><code>isgood</code> - Boolean variable indicating the state of the
+module.</li>
+<li><code>ui_msg</code> - Messaages returned to the UI with captured
+errors populated with <code>FM_set_ui_msg()</code></li>
+</ul>
+<p>Other than those fields you can store whatever else you need for your
+module.</p>
 </div>
 <div id="configuration-file" class="section level2">
 <h2>Configuration file</h2>

@@ -64,13 +64,15 @@ ui <- dashboardPage(
            verbatimTextOutput("ui_state"),width=12)),
        fluidRow(
          box(title="System Details",
-           "ui_asm_sys_details",
-           htmlOutput(NS("ASM", "ui_asm_sys_detials"))
-         ),
-         box(title="Load",
+           "ui_asm_sys_modules",
+           htmlOutput(NS("ASM", "ui_asm_sys_modules")),
+           "ui_asm_sys_packages",
+           htmlOutput(NS("ASM", "ui_asm_sys_packages")),
+           "ui_asm_sys_options",
+           htmlOutput(NS("ASM", "ui_asm_sys_options")),
            "ui_asm_sys_log",
-           verbatimTextOutput(NS("ASM", "ui_asm_sys_log"))
-         )
+           verbatimTextOutput(NS("ASM", "ui_asm_sys_log")),
+         width=12)
          )
        ),
        tabItem(tabName="other", "Here you can put other elements of your App")
