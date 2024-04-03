@@ -1,4 +1,4 @@
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -6,7 +6,7 @@ knitr::opts_chunk$set(
 
 library(formods)
 
-## ---- echo = FALSE, eval=TRUE-------------------------------------------------
+## ----echo = FALSE, eval=TRUE--------------------------------------------------
 curr_mods = FM_fetch_current_mods()
 #library(rhandsontable)
 #rhandsontable::rhandsontable(curr_mods$df, width=750, rowHeaders = NULL) %>%

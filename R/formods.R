@@ -14,40 +14,88 @@
 #'@import cli
 #'@importFrom digest digest
 #'@importFrom writexl write_xlsx
+.onAttach <- function(libname, pkgname){
 
+  #------------------------------------
+  # If all the suggested packages are found this will be true:
+  suggested_found = TRUE
+  packageStartupMessage("Loading formods")
+
+  fcres = formods_check(verbose = FALSE)
+  if(!fcres[["all_found"]]){
+    packageStartupMessage("Missing suggested packages")
+    for(pkg in fcres[["missing_pkgs"]]){
+      packageStartupMessage(paste0(" - ",pkg))
+    }
+  }
+}
 
 #'@export
-#'@title Fetches Models from Modules in the App
-#'@description  Loops through each specified module ID or all modules if no ID
-#'was specified. For each ID, an attempt will be made to extract any models
-#'available.
-#'@param state Current module state after yaml file has been read
-#'@param session Shiny session variable
-#'@param ids  Vector of ID strings for the modules containing models or
-#'NULL for all modules with models available.
-#'@return list containing the current dataset with the following format:
-#' JMH
+#'@title Checks `formods` Dependencies
+#'@description  Looks at the suggested dependencies and checks to make sure
+#'@param verbose Logical indicating if messages should be displayed
+#'@return List with the following elements:
 #' \itemize{
-#'   \item{isgood:} Boolean indicating the whether a dataset was found
-#'   (\code{FALSE})
-#'   \item{catalog:} Dataframe containing the a tabular catalog of the
-#'   models found.
-#'   \itemize{
-#'     \item{label:} Text label
-#'   }
-#'   \item{modules:} List with an entry for each module..
-#' }
+#'   \item{all_found:}    Boolean indicating if all packages were found
+#'   \item{found_pkgs:}   Character vector of found packages
+#'   \item{missing_pkgs:} Character vector of missing packages
+#'}
 #'@examples
-#' # We need a module state and a Shiny session variable
-#' # to use this function:
-#' id="UD"
-#' sess_res = UD_test_mksession(session=list(), id=id)
-#' session = sess_res$session
-#' state   = sess_res$state
-#' mdl = FM_fetch_mdl(state, session)
-#' mdl$catalog
-FM_fetch_mdl = function(state, session, ids=NULL){
-}
+#' fcres = formods_check()
+formods_check <- function(verbose=TRUE){
+
+  #------------------------------------
+  # Checking for rxpackages
+  # If all the suggested packages are found this will be true:
+  suggested_found = TRUE
+  if(verbose){
+    mr = FM_message("Checking formods for suggested packages", entry_type="h1")
+  }
+
+  pkgs = c(
+    "clipr",
+    "covr",
+    "devtools",
+    "DT",
+    "flextable",
+    "ggpubr",
+    "gtools",
+    "here",
+    "janitor",
+    "knitr",
+    "plotly",
+    "prompter",
+    "rmarkdown",
+    "shinybusy",
+    "shinydashboard",
+    "testthat",
+    "utils")
+
+  pkg_found   = c()
+  pkg_missing =  c()
+  for(pkg in pkgs){
+    if(!requireNamespace(pkg, quietly=TRUE)){
+      if(verbose){
+        mr = FM_message(paste0("missing ", pkg), entry_type="danger")
+      }
+      pkg_missing = c(pkg_missing, pkg)
+      suggested_found = FALSE
+    } else {
+      if(verbose){
+        mr = FM_message(paste0("found ", pkg), entry_type="success")
+      }
+      pkg_found   = c(pkg_found  , pkg)
+    }
+  }
+
+  res = list(
+    all_found     = suggested_found,
+    found_pkgs    = pkg_found,
+    missing_pkgs  = pkg_missing
+  )
+res}
+
+
 
 #'@export
 #'@title Fetches Datasets from Modules in the App
@@ -189,8 +237,8 @@ autocast = function(ui_input, quote_char=TRUE){
 
 
   ui_input_num = as.numeric(as.character(ui_input))
-
-  if(any(is.na(ui_input_num))){
+                                # NULL returns numeric length zero
+  if(any(is.na(ui_input_num)) | (length(ui_input_num) == 0)){
     res = as.character(ui_input)
     if(quote_char){
       res = paste0('"', res, '"')
@@ -275,6 +323,48 @@ has_changed = function(ui_val     = NULL,
   }
 res}
 
+#'@export
+#'@title Detect if a UI element has updated
+#'@description Takes a UI element value and an older value and determines if
+#'it has been modified
+#'@param ui_val     Current value from the UI.
+#'@param old_val    Last value of of the element.
+#'defined.
+#'@return Boolean result of the comparison
+#'@examples
+#' changed_true  = has_updated(ui_val = "a", old_val = "")
+#' changed_true
+#' changed_false = has_updated(ui_val = "a", old_val = "a")
+#' changed_false
+has_updated = function(ui_val     = NULL,
+                       old_val    = NULL){
+  res = FALSE
+
+  # Detecting length differences
+  if(length(ui_val) != length(old_val)){
+    res = TRUE
+  } else if((length(ui_val) == length(old_val)) &
+             length(ui_val) > 1){
+    # here we're comparing vectors
+    if(!all(ui_val %in% old_val)){
+     res = TRUE
+    }
+  } else {
+    # here we're comparing scalers
+    if((length(ui_val)  == 1) &
+       (length(old_val) == 1)){
+      if(ui_val != old_val){
+        res = TRUE
+        #message(paste0("old_val: ", old_val))
+        #message(paste0("ui_val: ",  ui_val))
+      }
+    } else {
+      message("Unknown scenario has_updated:")
+      message(paste0("old_val: ", old_val))
+      message(paste0("ui_val: ",  ui_val ))
+    }
+  }
+res}
 #'@export
 #'@title Removes Hold on UI Element
 #'@description When some buttons are clicked they will change the state of the
@@ -653,7 +743,7 @@ isgood}
 #'installed or not.
 #'@param line  Text to display
 #'@param escape_braces Set to \code{TRUE} (default) to escape curly braces in the entry, set to \code{FALSE} to have the values interpreted.
-#'@param entry_type  Set to either "alert"(default), "danger", "info", "success", or "warning"
+#'@param entry_type  Set to either "alert"(default), "danger", "info", "success", "warning", "h1", "h2", or "h3"
 #'@return Returns NULL
 #'@examples
 #' mr = FM_message("This is a normal  message")
@@ -661,8 +751,11 @@ isgood}
 #' mr = FM_message("This is a info    message", entry_type="info")
 #' mr = FM_message("This is a success message", entry_type="success")
 #' mr = FM_message("This is a warning message", entry_type="warning")
+#' mr = FM_message("This is an H1 header",      entry_type="h1")
+#' mr = FM_message("This is an H2 header",      entry_type="h2")
+#' mr = FM_message("This is an H3 header",      entry_type="h3")
 FM_message = function(line, escape_braces=TRUE, entry_type="alert"){
-  if(system.file(package="cli") != ""){
+  if(is_installed("cli") != ""){
     if(escape_braces){
       if(entry_type=="alert"){
         cli::cli_alert("{line}") }
@@ -674,6 +767,12 @@ FM_message = function(line, escape_braces=TRUE, entry_type="alert"){
         cli::cli_alert_info("{line}") }
       if(entry_type=="success"){
         cli::cli_alert_success("{line}") }
+      if(entry_type=="h1"){
+        cli::cli_h1("{line}") }
+      if(entry_type=="h2"){
+        cli::cli_h2("{line}") }
+      if(entry_type=="h3"){
+        cli::cli_h3("{line}") }
     } else {
       if(entry_type=="alert"){
         cli::cli_alert(line)}
@@ -685,6 +784,12 @@ FM_message = function(line, escape_braces=TRUE, entry_type="alert"){
         cli::cli_alert_info(line)}
       if(entry_type=="success"){
         cli::cli_alert_success(line)}
+      if(entry_type=="h1"){
+        cli::cli_h1(line)}
+      if(entry_type=="h2"){
+        cli::cli_h2(line)}
+      if(entry_type=="h3"){
+        cli::cli_h3(line)}
     }
   } else {
     message(line)
@@ -1171,6 +1276,11 @@ FM_init_state = function(
   # This holds all the ui IDs from the interface
   state[[MT]][["ui_ids"]]    = ui_ids
 
+ ## This tracks if the ui_id has been initialized or not:
+ #for(tmp_ui_id in ui_ids){
+ #  state[[MT]][["ui_ids_init"]][[tmp_ui_id]] = FALSE
+ #}
+
   # Messaging passed back to the user
   state[[MT]][["ui_msg"]]    = NULL
 
@@ -1182,7 +1292,7 @@ FM_init_state = function(
   state[["FM_yaml_file"]]    = FM_yaml_file
   state[["MOD_yaml_file"]]   = MOD_yaml_file
 
-  # If we're not in a shiny environment then 
+  # If we're not in a shiny environment then
   # the token will ne NULL otherwise it will
   # be a checksum
   if(is.null(session$token)){
@@ -2140,12 +2250,16 @@ res}
 #'@param href URL to link to.
 #'@param target New tab name.
 #'@param icon_name Name of icon to use (arguemnt to shiny::icon, default: "circle-info")
-#'@return A list with a shiny.tag class that can be converted into an HTML string via as.character() and saved to a file with save_html()
+#'@return A list with a shiny.tag class that can be converted into an HTML string via as.character() and saved to a file with save_html(). Note if href is \code{NULL} then \code{NULL} is returned.
 #'@examples
 #' icon_link(href="https://formods.ubiquity.tools")
 icon_link = function(href, target="_blank", icon_name="circle-info"){
 
-  res = tags$a(href=href, target=target, shiny::icon(icon_name))
+  res = NULL
+
+  if(!is.null(href)){
+    res = tags$a(href=href, target=target, shiny::icon(icon_name))
+  }
 
 res}
 
@@ -2209,7 +2323,7 @@ res}
 is_installed = function(pkgname){
 
   res = TRUE
-  if(system.file(package = pkgname) == ""){
+  if(!requireNamespace(pkgname, quietly=TRUE)){
     res = FALSE
   }
 
@@ -2254,7 +2368,9 @@ new_module_template = function(
     server = list(source = system.file(package="formods", "templates", "ZZ_Server.R"),
                   dest   = paste0(SN, "_Server.R")),
     yaml   = list(source = system.file(package="formods", "templates", "ZZ.yaml"),
-                  dest   = paste0(SN, ".yaml"))
+                  dest   = paste0(SN, ".yaml")),
+    funcs  = list(source = system.file(package="formods", "templates", "ZZ_funcs.R"),
+                  dest   = paste0(SN, "_funcs.R"))
   )
 
   # Placeholder substitutions
@@ -2321,7 +2437,7 @@ use_formods = function(
   if(is.null(repo_root)){
     if(system.file(package="here") == ""){
       message("The repo_root is not specified and the here package is not installed.")
-      message("You need to either specify the repo_root or install the hear package.")
+      message("You need to either specify the repo_root or install the here package.")
       stop("use_formod()")
      } else{
        repo_root = here::here()
@@ -2338,6 +2454,10 @@ use_formods = function(
     dir.create(template_dir, recursive=TRUE)
   }
 
+  test_apps_dir = file.path(repo_root, "inst", "test_apps")
+  if(!dir.exists(test_apps_dir)){
+    dir.create(test_apps_dir, recursive=TRUE)
+  }
 
   # Creating the new template files in the temp directory
   nmr = new_module_template(
@@ -2347,16 +2467,167 @@ use_formods = function(
           element  = element,
           file_dir = tempdir())
 
-  tmp_server = file.path(here::here(), "R", nmr[["server"]][["dest"]])
-  tmp_yaml   = file.path(here::here(), "inst", "templates", nmr[["yaml"]][["dest"]])
-  tmp_mc     = file.path(here::here(), "inst", "templates", nmr[["mc"]][["dest"]])
+  tmp_server = file.path(repo_root, "R",                 nmr[["server"]][["dest"]])
+  tmp_yaml   = file.path(repo_root, "inst", "templates", nmr[["yaml"]][["dest"]])
+  tmp_mc     = file.path(repo_root, "inst", "templates", nmr[["mc"]][["dest"]])
+  tmp_funcs  = file.path(repo_root, "inst", "test_apps", nmr[["funcs"]][["dest"]])
 
   message("Creating module files:")
   message(paste0(" - ", tmp_server))
   message(paste0(" - ", tmp_yaml))
   message(paste0(" - ", tmp_mc))
+  message(paste0(" - ", tmp_funcs))
 
-  file.copy(from = nmr[["server"]][["dest_full"]], to = tmp_server, overwrite =  overwrite)
-  file.copy(from = nmr[["yaml"]][["dest_full"]],   to = tmp_yaml,   overwrite =  overwrite)
-  file.copy(from = nmr[["mc"]][["dest_full"]],     to = tmp_mc,     overwrite =  overwrite)
+  file.copy(from = nmr[["server"]][["dest_full"]],  to = tmp_server,  overwrite =  overwrite)
+  file.copy(from = nmr[["yaml"]][["dest_full"]],    to = tmp_yaml,    overwrite =  overwrite)
+  file.copy(from = nmr[["mc"]][["dest_full"]],      to = tmp_mc,      overwrite =  overwrite)
+  file.copy(from = nmr[["funcs"]][["dest_full"]],   to = tmp_funcs,   overwrite =  overwrite)
 nmr}
+
+#'@export
+#'@title Fetches Models from Modules in the App
+#'@description  Loops through each specified module ID or all modules if no ID
+#'was specified. For each ID, an attempt will be made to extract any models
+#'available.
+#'@param state Current module state after yaml file has been read
+#'@param session Shiny session variable
+#'@param ids  Vector of ID strings for the modules containing models or
+#'NULL for all modules with models available.
+#'@return list containing the current dataset with the following format:
+#' \itemize{
+#'    \item{isgood:} General logical indicator of successfully.
+#'    \item{hasmdl:} Logical indicating if at least one model was found.
+#'    \item{modules:} List of module checksums.
+#'    \item{mdl:} Result of MM_fetch_mdl, see  \code{vignette("making_modules", package = "formods")}
+#'   \item{catalog:} Dataframe containing the a tabular catalog of the
+#'   models found.
+#'   \itemize{
+#'     \item{label:}  Text label for the model.
+#'     \item{object :}  Name of the object that contains the compiled rxode2 model.
+#'     \item{MOD_TYPE:}  Type of `formods` module the model came from.
+#'     \item{id:} Source `formods` Module ID.
+#'     \item{checksum:} Checksum of the module where the model came from.
+#'     \item{MDLchecksum:} Checksum of the model.
+#'     \item{code:}  Code to generate the model.
+#'   }
+#' }
+#'@examples
+#' # We need a module state and a Shiny session variable
+#' # to use this function:
+#' id="UD"
+#' sess_res = UD_test_mksession(session=list(), id=id)
+#' session = sess_res$session
+#' state   = sess_res$state
+#' mdl = FM_fetch_mdl(state, session)
+#' mdl$catalog
+FM_fetch_mdl = function(state, session, ids=NULL){
+
+
+  hasmdl  = FALSE
+  isgood  = TRUE
+  modules = list()
+  catalog = NULL
+  msgs    = c()
+  mdl     = list()
+
+
+  # If we're null then we walk through the session variable and pull out all
+  # the IDs to be used below
+  if(is.null(ids)){
+    # Pulling out the app state:
+    app_state = FM_fetch_app_state(session)
+    for(mod_state in names(app_state)){
+      ids = c(ids, app_state[[mod_state]]$id)
+    }
+  }
+
+  # Walking through each module id and attempting to extract models
+  for(tmp_id in ids){
+
+    # pulling out the current module state and creating the
+    # name of the model fetching function for that module
+    tmp_state    = FM_fetch_mod_state(session, tmp_id)
+    tmp_MOD_TYPE = tmp_state[["MOD_TYPE"]]
+    MOD_FUNC     = paste0(tmp_MOD_TYPE, "_fetch_mdl")
+
+    # If that module has a mdl fetching function then we try to fetch it:
+    if(exists(MOD_FUNC, mode="function")){
+      #
+      #     # Function call used to fetch a dataset
+      fetch_res = NULL
+      FUNC_CALL = paste0("fetch_res = ", MOD_FUNC,"(state = tmp_state)")
+      eval(parse(text=FUNC_CALL))
+
+      if(fetch_res[["hasmdl"]]){
+        # We've found at least one model
+        hasmdl = TRUE
+        mdl = c(mdl, fetch_res[["mdl"]])
+      }
+    }
+  }
+
+  if(hasmdl){
+    # Creating catalog and modules elements:
+    for(mdlname in names(mdl)){
+      catalog = rbind(
+        catalog,
+        data.frame(
+          label       = mdl[[mdlname]][["label"]],
+          object      = mdlname,
+          MOD_TYPE    = mdl[[mdlname]][["MOD_TYPE"]],
+          id          = mdl[[mdlname]][["id"]],
+          checksum    = mdl[[mdlname]][["checksum"]],
+          MDLchecksum = mdl[[mdlname]][["MDLchecksum"]],
+          code        = mdl[[mdlname]][["code"]])
+      )
+
+      modules[[ mdl[[mdlname]][["MOD_TYPE"]]]  ][[ mdl[[mdlname]][["id"]] ]] = mdl[[mdlname]][["checksum"]]
+    }
+  } else {
+    isgood = FALSE
+  }
+
+  # Packing everything up to be returned to the user
+  res = list(isgood  = isgood,
+             hasmdl  = hasmdl,
+             catalog = catalog,
+             modules = modules,
+             mdl     = mdl)
+
+
+  res}
+
+#'@export
+#'@title Implementation of the \code{linspace} Function from Matlab
+#'@description Creates a vector of n elements equally spaced apart.
+#'
+#'@param a initial number
+#'@param b final number
+#'@param n number of elements  (integer >= 2)
+#'
+#'@return vector of numbers from \code{a} to \code{b} with
+#'\code{n} linearly spaced apart
+#'@examples
+#' linspace(0,100, 20)
+linspace = function(a, b, n=100){
+   isgood = TRUE
+
+   n = as.integer(n)
+
+   if(!is.integer(n)){
+     isgood = FALSE }
+
+   if(n < 2){
+     isgood = FALSE }
+
+   if(!isgood){
+     message("#> linspace error:")
+     message("#> n should be a positive integer >= 2 ")
+     message("#> defaulting to 100")
+     n = 100
+   }
+
+   step = (b-a)/(n-1)
+   return(seq(a,b,step))
+
+}

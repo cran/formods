@@ -249,9 +249,10 @@ FG_Server <- function(id,
           div(style="display:inline-block", htmlOutput(NS(id, "ui_fg_add_element_button"))),
           div(style="display:inline-block", htmlOutput(NS(id, "ui_fg_select"))),
           tags$br(),
-          htmlOutput(NS(id, "ui_fg_new_element_row")),
-          tags$br(),
-          verbatimTextOutput(NS(id, "ui_fg_msg")) # JMH this shouldn't be here, I think? it's a repeat from above.
+          htmlOutput(NS(id, "ui_fg_new_element_row")
+         #tags$br(),
+         #verbatimTextOutput(NS(id, "ui_fg_msg")
+          ) # JMH this shouldn't be here, I think? it's a repeat from above.
         )
       }
 
@@ -1930,9 +1931,11 @@ state}
 #'  \item{msgs:}   Messages to be passed back to the user
 #'}
 #'@examples
+#'\donttest{
 #' sess_res = FG_test_mksession(session=list(), full_session=FALSE)
 #' state = sess_res$state
 #' fb_res = fers_builder(state)
+#'}
 fers_builder = function(state){
 
   isgood = TRUE
@@ -2447,9 +2450,11 @@ state}
 #'@return state with checksum updated.
 #'@examples
 #'# This will create a populated FG state object:
+#'\donttest{
 #' sess_res = FG_test_mksession(session=list(), full_session=FALSE)
 #' state   = sess_res$state
 #' state = FG_update_checksum(state)
+#'}
 FG_update_checksum = function(state){
 
   fig_checksums = c()
@@ -2518,11 +2523,13 @@ fobj}
 #'@param state UD state from \code{FG_fetch_state()}
 #'@return Character object vector with the lines of code
 #'@examples
+#'\donttest{
 #'# This will create a populated FG state object:
 #'sess_res = FG_test_mksession(session=list(), full_session=FALSE)
 #'state   = sess_res$state
 #'code  = FG_fetch_code(state)
 #'cat(paste(code, collapse="\n"))
+#'}
 FG_fetch_code = function(state){
   if(state[["FG"]][["isgood"]]){
     figs_code = c()
@@ -2556,15 +2563,16 @@ code}
 #'}
 #'@seealso \code{\link{FM_generate_report}}
 #'@examples
+#'\donttest{
 #' sess_res = FG_test_mksession(session=list(), full_session=FALSE)
 #' state = sess_res$state
-#' # This will read in the default PowerPoint report template 
-#' rpt = 
+#' # This will read in the default PowerPoint report template
+#' rpt =
 #' onbrand::read_template(
 #'  template = system.file(package="onbrand","templates","report.pptx"),
 #'  mapping  = system.file(package="onbrand","templates","report.yaml"))
 #'
-#' rpt_res = 
+#' rpt_res =
 #' FG_append_report(state   = state,    rpt = rpt,
 #'                  rpttype = "pptx", gen_code_only=TRUE)
 #'
@@ -2573,8 +2581,7 @@ code}
 #'
 #' # Code chunk to generate report element
 #' cat(paste(rpt_res$code, collapse="\n"))
-#'
-#'
+#'}
 FG_append_report = function(state, rpt, rpttype, gen_code_only=FALSE){
 
   isgood    = TRUE
@@ -2748,7 +2755,9 @@ res}
 #'   \item{rsc:} The \code{react_state} components.
 #'}
 #'@examples
+#'\donttest{
 #' sess_res = FG_test_mksession(session=list(), full_session=FALSE)
+#'}
 FG_test_mksession = function(session, id = "FG", id_UD="UD", id_DW="DW", full_session=TRUE){
 
   isgood = TRUE
@@ -2839,30 +2848,30 @@ FG_test_mksession = function(session, id = "FG", id_UD="UD", id_DW="DW", full_se
     current_fig[["key"]]         = state[["FG"]][["ui"]][["text_fig_key"]]
     current_fig[["fig_dsview"]]  = state[["FG"]][["ui"]][["select_current_view"]]
     state = FG_set_current_fig(state, current_fig)
-    
+
     # Adding the lines
     state[["FG"]][["ui"]][["select_fg_element"]]          = "line"
     state[["FG"]][["ui"]][["select_component_x"]]         = "TIME_DY"
     state[["FG"]][["ui"]][["select_component_y"]]         = "DV"
     state[["FG"]][["ui"]][["select_component_group"]]     = "ID"
-    
+
     fgb_res  = fers_builder(state)
     state = FG_build( state,
       cmd     = fgb_res[["cmd"]],
       element = fgb_res[["element"]],
       desc    = fgb_res[["desc"]])
-    
-    
+
+
     # setting the log scale
     state[["FG"]][["ui"]][["select_fg_element"]]          = "scales"
     state[["FG"]][["ui"]][["select_component_yscale"]]    = "log10"
-    
+
     fgb_res  = fers_builder(state)
     state = FG_build( state,
       cmd     = fgb_res[["cmd"]],
       element = fgb_res[["element"]],
       desc    = fgb_res[["desc"]])
-    
+
     #------------------------------------
     # Plotting the 3 mg MD SC first dose cohort
     # Updating the key and data view
@@ -2873,30 +2882,30 @@ FG_test_mksession = function(session, id = "FG", id_UD="UD", id_DW="DW", full_se
     current_fig[["key"]]         = state[["FG"]][["ui"]][["text_fig_key"]]
     current_fig[["fig_dsview"]]  = state[["FG"]][["ui"]][["select_current_view"]]
     state = FG_set_current_fig(state, current_fig)
-    
+
     # Adding the lines
     state[["FG"]][["ui"]][["select_fg_element"]]          = "line"
     state[["FG"]][["ui"]][["select_component_x"]]         = "TIME_DY"
     state[["FG"]][["ui"]][["select_component_y"]]         = "DV"
     state[["FG"]][["ui"]][["select_component_group"]]     = "ID"
-    
+
     fgb_res  = fers_builder(state)
     state = FG_build( state,
       cmd     = fgb_res[["cmd"]],
       element = fgb_res[["element"]],
       desc    = fgb_res[["desc"]])
-    
-    
+
+
     # setting the log scale
     state[["FG"]][["ui"]][["select_fg_element"]]          = "scales"
     state[["FG"]][["ui"]][["select_component_yscale"]]    = "log10"
-    
+
     fgb_res  = fers_builder(state)
     state = FG_build( state,
       cmd     = fgb_res[["cmd"]],
       element = fgb_res[["element"]],
       desc    = fgb_res[["desc"]])
-    
+
     #------------------------------------
     # Boxplots of parameters
     # Updating the key and data view
@@ -2907,7 +2916,7 @@ FG_test_mksession = function(session, id = "FG", id_UD="UD", id_DW="DW", full_se
     current_fig[["key"]]         = state[["FG"]][["ui"]][["text_fig_key"]]
     current_fig[["fig_dsview"]]  = state[["FG"]][["ui"]][["select_current_view"]]
     state = FG_set_current_fig(state, current_fig)
-    
+
     # Adding the boxplots
     state[["FG"]][["ui"]][["select_fg_element"]]          = "boxplot"
     state[["FG"]][["ui"]][["select_component_x"]]         = "parameter"
@@ -2918,17 +2927,17 @@ FG_test_mksession = function(session, id = "FG", id_UD="UD", id_DW="DW", full_se
     # purposes here we need to reset those manually.
     state[["FG"]][["ui"]][["select_component_group"]]     = ""
     state[["FG"]][["ui"]][["select_component_color"]]     = ""
-    
+
     fgb_res  = fers_builder(state)
     state = FG_build( state,
       cmd     = fgb_res[["cmd"]],
       element = fgb_res[["element"]],
       desc    = fgb_res[["desc"]])
-    
+
     # setting the log scale
     state[["FG"]][["ui"]][["select_fg_element"]]          = "scales"
     state[["FG"]][["ui"]][["select_component_yscale"]]    = "log10"
-    
+
     fgb_res  = fers_builder(state)
     state = FG_build( state,
       cmd     = fgb_res[["cmd"]],

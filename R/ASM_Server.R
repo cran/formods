@@ -35,7 +35,7 @@ ASM_Server <- function(id,
 
     #------------------------------------
     # Create ui outputs here:
-    output$ui_asm_save_name  = renderUI({
+    output$ui_asm_save_name_text  = renderUI({
       state = ASM_fetch_state(id           = id,
                               input        = input,
                               session      = session,
@@ -70,22 +70,22 @@ ASM_Server <- function(id,
     #------------------------------------
     output$ui_asm_compact  =  renderUI({
       uiele = tagList(
-           htmlOutput(NS("ASM", "ui_asm_save_name")),
-           htmlOutput(NS("ASM", "ui_asm_switch_gen_rpts")),
-           htmlOutput(NS("ASM", "ui_asm_save_button")),
+           htmlOutput(NS(id, "ui_asm_save_name_text")),
+           htmlOutput(NS(id, "ui_asm_switch_gen_rpts")),
+           htmlOutput(NS(id, "ui_asm_save_button")),
            tags$br(),
            div(style="text-align:center",
              div(style="display:inline-block;width:32%",
-             htmlOutput(NS("ASM", "ui_asm_rpt_pptx"))),
+             htmlOutput(NS(id, "ui_asm_rpt_pptx"))),
              div(style="display:inline-block;width:32%",
-             htmlOutput(NS("ASM", "ui_asm_rpt_docx"))),
+             htmlOutput(NS(id, "ui_asm_rpt_docx"))),
              div(style="display:inline-block;width:32%",
-             htmlOutput(NS("ASM", "ui_asm_rpt_xlsx"))),
+             htmlOutput(NS(id, "ui_asm_rpt_xlsx"))),
            ),
            tags$br(),
            tags$br(),
-           htmlOutput(NS("ASM", "ui_asm_load_state")),
-           verbatimTextOutput(NS("ASM", "ui_asm_msg"))
+           htmlOutput(NS(id, "ui_asm_load_state")),
+           verbatimTextOutput(NS(id, "ui_asm_msg"))
       )
 
       uiele})
@@ -177,11 +177,17 @@ ASM_Server <- function(id,
                                 session      = session,
                                 FM_yaml_file = FM_yaml_file,
                                 MOD_yaml_file = MOD_yaml_file)
+        FM_pause_screen(state   = state,
+                        message = state[["MC"]][["labels"]][["busy"]][["pptx"]],
+                        session = session)
         rpt_res =
         FM_generate_report(state     = state,
                            session   = session,
                            file_dir  = dirname(file),
                            file_name = basename(file))
+
+        FM_resume_screen(state   = state,
+                         session = session)
         }
     )
     #------------------------------------
@@ -202,11 +208,16 @@ ASM_Server <- function(id,
                                 session      = session,
                                 FM_yaml_file = FM_yaml_file,
                                 MOD_yaml_file = MOD_yaml_file)
+        FM_pause_screen(state   = state,
+                        message = state[["MC"]][["labels"]][["busy"]][["docx"]],
+                        session = session)
         rpt_res =
         FM_generate_report(state     = state,
                            session   = session,
                            file_dir  = dirname(file),
                            file_name = basename(file))
+        FM_resume_screen(state   = state,
+                         session = session)
         }
     )
       uiele})
@@ -228,11 +239,16 @@ ASM_Server <- function(id,
                                 session      = session,
                                 FM_yaml_file = FM_yaml_file,
                                 MOD_yaml_file = MOD_yaml_file)
+        FM_pause_screen(state   = state,
+                        message = state[["MC"]][["labels"]][["busy"]][["xlsx"]],
+                        session = session)
         rpt_res =
         FM_generate_report(state     = state,
                            session   = session,
                            file_dir  = dirname(file),
                            file_name = basename(file))
+        FM_resume_screen(state   = state,
+                         session = session)
         }
     )
     #------------------------------------
@@ -361,7 +377,7 @@ ASM_Server <- function(id,
       app_info = FM_fetch_app_info(session)
 
       uiele = app_info[["uiele_modules"]]
-      
+
     uiele})
     #------------------------------------
     output$ui_asm_sys_packages = renderUI({
@@ -373,7 +389,7 @@ ASM_Server <- function(id,
       app_info = FM_fetch_app_info(session)
 
       uiele = app_info[["uiele_packages"]]
-      
+
     uiele})
     #------------------------------------
     output$ui_asm_sys_options = renderUI({
@@ -385,7 +401,7 @@ ASM_Server <- function(id,
       app_info = FM_fetch_app_info(session)
 
       uiele = app_info[["uiele_options"]]
-      
+
     uiele})
     #------------------------------------
     # fileReaderData must be defined outside of the outputs below so it
@@ -417,7 +433,7 @@ ASM_Server <- function(id,
       }
       text[is.na(text)]  = ""
       uiele = paste(text, collapse = '\n')
- 
+
     uiele})
 
 #     cfg=gui_fetch_cfg(session)
@@ -847,7 +863,6 @@ code}
 #'@param id An ID string that corresponds with the ID used to call the modules UI elements
 #'@param id_UD An ID string that corresponds with the ID used to call the UD modules UI elements
 #'@param id_DW An ID string that corresponds with the ID used to call the DW modules UI elements
-#'@param id_FG An ID string that corresponds with the ID used to call the FG modules UI elements
 #'@param full_session  Boolean to indicate if the full test session should be created (default \code{TRUE}).
 #'@return list with the following elements
 #' \itemize{
@@ -859,14 +874,15 @@ code}
 #'}
 #'@examples
 #' sess_res = ASM_test_mksession(session=list(), full_session=FALSE)
-ASM_test_mksession = function(session, id="ASM", id_UD="UD", id_DW = "DW", id_FG="FG", full_session=TRUE){
+ASM_test_mksession = function(session, id="ASM", id_UD="UD", id_DW = "DW", full_session=TRUE){
 
   isgood = TRUE
   rsc    = list()
   input  = list()
 
-  # Populating the session with FG components
-  sess_res = FG_test_mksession(session, id=id_FG, id_UD = id_UD, id_DW=id_DW, full_session=full_session)
+  # Populating the session with DW components
+  #sess_res = FG_test_mksession(session, id=id_FG, id_UD = id_UD, id_DW=id_DW, full_session=full_session)
+  sess_res = DW_test_mksession(session, id=id_DW, id_UD=id_UD)
   if(!("ShinySession" %in% class(session))){
     session = sess_res[["session"]]
   }

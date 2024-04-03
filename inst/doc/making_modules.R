@@ -1,4 +1,4 @@
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -35,7 +35,7 @@ hot = rhandsontable::rhandsontable(
   rowHeaders = NULL
   )
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 hot
 
 ## ----echo=FALSE, message=FALSE, warning=FALSE, eval=TRUE, class.output=".scroll-100", comment=''----
