@@ -1934,7 +1934,7 @@ list with the following elements for each dataset:
 <li><code>DSchecksum</code> Dataset checksum.</li>
 </ul></li>
 </ul></li>
-<li><code>MM_fetch_mdl</code> If a module provides data sets to be used
+<li><code>MM_fetch_mdl</code> If a module provides ODE models to be used
 in other modules you need to create this function. It should return at
 least the following:
 <ul>
@@ -1961,6 +1961,14 @@ from.</li>
 <li><code>DSchecksum</code> Checksum of the model.</li>
 </ul></li>
 </ul></li>
+<li><code>MM_onload</code> The ASM module provides the ability to load a
+previous analysis. Some elements of the module state may need to be
+changed on load. For example if you have compiled binary data in state,
+and the underlying libraries can change over time, you can use this
+function to recompile when the analysis is loaded. This function is
+optional and the template example can be deleted if you do not need it.
+The default in the template should just pass the state back
+unchanged.</li>
 <li><code>MM_test_mksession</code> When testing outside of Shiny it is
 useful to have a prepopulated session, intput, etc objects with actual
 data. Each module shoudl have a <code>test_mksession</code> function
@@ -2163,8 +2171,8 @@ package.</p>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">colHeaders =</span> <span class="fu">as.vector</span>(<span class="fu">unlist</span>(hfmt[[<span class="st">&quot;col_heads&quot;</span>]])),</span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">rowHeaders =</span> <span class="cn">NULL</span></span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
-<div id="htmlwidget-d551e431ca9f59a75dea" style="width:100%;height:100%;" class="rhandsontable html-widget"></div>
-<script type="application/json" data-for="htmlwidget-d551e431ca9f59a75dea">{"x":{"data":[{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":3000000,"DV":0,"RECDESC":"dose","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"Ac","DUR":0,"EVID":1,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":0,"DV":1250,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":0,"DV":0,"RECDESC":"C_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"C_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":1,"TIME_HR":24,"NTIME_DY":1,"NTIME_HR":24,"TIME":24,"AMT":0,"DV":1647,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":1,"TIME_HR":24,"NTIME_DY":1,"NTIME_HR":24,"TIME":24,"AMT":0,"DV":690.5,"RECDESC":"C_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"C_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":2,"TIME_HR":48,"NTIME_DY":2,"NTIME_HR":48,"TIME":48,"AMT":0,"DV":1947,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1}],"rClass":["tbl_df","tbl","data.frame"],"rColClasses":{"ID":"numeric","TIME_DY":"numeric","TIME_HR":"numeric","NTIME_DY":"numeric","NTIME_HR":"numeric","TIME":"numeric","AMT":"numeric","DV":"numeric","RECDESC":"character","DOSE":"numeric","DOSE_STR":"character","Cohort":"character","ROUTE":"character","WT":"numeric","SUBTYPE":"character","SEX":"character","F1":"numeric","ka":"numeric","CL":"numeric","Vc":"numeric","Vp":"numeric","Q":"numeric","BM_IC":"numeric","kdeg_BM":"numeric","Emax":"numeric","EC50":"numeric","CMT":"character","DUR":"numeric","EVID":"numeric","NDose":"character","DOSE_NUM":"numeric","SUBTYPE_ID":"numeric","SEX_ID":"numeric"},"rColnames":["ID","TIME_DY","TIME_HR","NTIME_DY","NTIME_HR","TIME","AMT","DV","RECDESC","DOSE","DOSE_STR","Cohort","ROUTE","WT","SUBTYPE","SEX","F1","ka","CL","Vc","Vp","Q","BM_IC","kdeg_BM","Emax","EC50","CMT","DUR","EVID","NDose","DOSE_NUM","SUBTYPE_ID","SEX_ID"],"rColHeaders":["ID","TIME_DY","TIME_HR","NTIME_DY","NTIME_HR","TIME","AMT","DV","RECDESC","DOSE","DOSE_STR","Cohort","ROUTE","WT","SUBTYPE","SEX","F1","ka","CL","Vc","Vp","Q","BM_IC","kdeg_BM","Emax","EC50","CMT","DUR","EVID","NDose","DOSE_NUM","SUBTYPE_ID","SEX_ID"],"rRowHeaders":null,"rDataDim":[6,33],"selectCallback":false,"colHeaders":["<span style='color:#3C8DBC'><b>ID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME_DY<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME_HR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>NTIME_DY<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>NTIME_HR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>AMT<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>DV<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>RECDESC<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DOSE<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>DOSE_STR<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>Cohort<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>ROUTE<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>WT<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>SUBTYPE<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>SEX<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>F1<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>ka<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>CL<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Vc<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Vp<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Q<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>BM_IC<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>kdeg_BM<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Emax<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>EC50<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>CMT<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DUR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>EVID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>NDose<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DOSE_NUM<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>SUBTYPE_ID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>SEX_ID<\/b><br/><font size='-3'>num<\/font><\/span>"],"rowHeaders":null,"columns":[{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null}],"width":"100%","height":"100%","debug":0,"search":false,"stretchH":"none","comments":false,"contextMenu":{"items":{"row_above":[],"row_below":[],"remove_row":[],"hsep3":{"name":"---------"},"undo":[],"redo":[],"hsep4":{"name":"---------"},"alignment":[]}}},"evals":["columns.0.renderer","columns.1.renderer","columns.2.renderer","columns.3.renderer","columns.4.renderer","columns.5.renderer","columns.6.renderer","columns.7.renderer","columns.8.renderer","columns.9.renderer","columns.10.renderer","columns.11.renderer","columns.12.renderer","columns.13.renderer","columns.14.renderer","columns.15.renderer","columns.16.renderer","columns.17.renderer","columns.18.renderer","columns.19.renderer","columns.20.renderer","columns.21.renderer","columns.22.renderer","columns.23.renderer","columns.24.renderer","columns.25.renderer","columns.26.renderer","columns.27.renderer","columns.28.renderer","columns.29.renderer","columns.30.renderer","columns.31.renderer","columns.32.renderer"],"jsHooks":[]}</script>
+<div id="htmlwidget-a3f2898e141a6efd9143" style="width:100%;height:100%;" class="rhandsontable html-widget"></div>
+<script type="application/json" data-for="htmlwidget-a3f2898e141a6efd9143">{"x":{"data":[{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":3000000,"DV":0,"RECDESC":"dose","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"Ac","DUR":0,"EVID":1,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":0,"DV":1250,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":0,"DV":0,"RECDESC":"C_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"C_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":1,"TIME_HR":24,"NTIME_DY":1,"NTIME_HR":24,"TIME":24,"AMT":0,"DV":1647,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":1,"TIME_HR":24,"NTIME_DY":1,"NTIME_HR":24,"TIME":24,"AMT":0,"DV":690.5,"RECDESC":"C_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"C_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":2,"TIME_HR":48,"NTIME_DY":2,"NTIME_HR":48,"TIME":48,"AMT":0,"DV":1947,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1}],"rClass":["tbl_df","tbl","data.frame"],"rColClasses":{"ID":"numeric","TIME_DY":"numeric","TIME_HR":"numeric","NTIME_DY":"numeric","NTIME_HR":"numeric","TIME":"numeric","AMT":"numeric","DV":"numeric","RECDESC":"character","DOSE":"numeric","DOSE_STR":"character","Cohort":"character","ROUTE":"character","WT":"numeric","SUBTYPE":"character","SEX":"character","F1":"numeric","ka":"numeric","CL":"numeric","Vc":"numeric","Vp":"numeric","Q":"numeric","BM_IC":"numeric","kdeg_BM":"numeric","Emax":"numeric","EC50":"numeric","CMT":"character","DUR":"numeric","EVID":"numeric","NDose":"character","DOSE_NUM":"numeric","SUBTYPE_ID":"numeric","SEX_ID":"numeric"},"rColnames":["ID","TIME_DY","TIME_HR","NTIME_DY","NTIME_HR","TIME","AMT","DV","RECDESC","DOSE","DOSE_STR","Cohort","ROUTE","WT","SUBTYPE","SEX","F1","ka","CL","Vc","Vp","Q","BM_IC","kdeg_BM","Emax","EC50","CMT","DUR","EVID","NDose","DOSE_NUM","SUBTYPE_ID","SEX_ID"],"rColHeaders":["ID","TIME_DY","TIME_HR","NTIME_DY","NTIME_HR","TIME","AMT","DV","RECDESC","DOSE","DOSE_STR","Cohort","ROUTE","WT","SUBTYPE","SEX","F1","ka","CL","Vc","Vp","Q","BM_IC","kdeg_BM","Emax","EC50","CMT","DUR","EVID","NDose","DOSE_NUM","SUBTYPE_ID","SEX_ID"],"rRowHeaders":null,"rDataDim":[6,33],"selectCallback":false,"colHeaders":["<span style='color:#3C8DBC'><b>ID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME_DY<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME_HR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>NTIME_DY<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>NTIME_HR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>AMT<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>DV<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>RECDESC<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DOSE<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>DOSE_STR<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>Cohort<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>ROUTE<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>WT<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>SUBTYPE<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>SEX<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>F1<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>ka<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>CL<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Vc<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Vp<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Q<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>BM_IC<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>kdeg_BM<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Emax<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>EC50<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>CMT<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DUR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>EVID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>NDose<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DOSE_NUM<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>SUBTYPE_ID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>SEX_ID<\/b><br/><font size='-3'>num<\/font><\/span>"],"rowHeaders":null,"columns":[{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null}],"width":"100%","height":"100%","debug":0,"search":false,"stretchH":"none","comments":false,"contextMenu":{"items":{"row_above":[],"row_below":[],"remove_row":[],"hsep3":{"name":"---------"},"undo":[],"redo":[],"hsep4":{"name":"---------"},"alignment":[]}}},"evals":["columns.0.renderer","columns.1.renderer","columns.2.renderer","columns.3.renderer","columns.4.renderer","columns.5.renderer","columns.6.renderer","columns.7.renderer","columns.8.renderer","columns.9.renderer","columns.10.renderer","columns.11.renderer","columns.12.renderer","columns.13.renderer","columns.14.renderer","columns.15.renderer","columns.16.renderer","columns.17.renderer","columns.18.renderer","columns.19.renderer","columns.20.renderer","columns.21.renderer","columns.22.renderer","columns.23.renderer","columns.24.renderer","columns.25.renderer","columns.26.renderer","columns.27.renderer","columns.28.renderer","columns.29.renderer","columns.30.renderer","columns.31.renderer","columns.32.renderer"],"jsHooks":[]}</script>
 <p>To add subtext to a selection widget in Shiny you need to use the
 <code>{shinyWidgets}</code> package.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>sel_subtext <span class="ot">=</span> <span class="fu">as.vector</span>(<span class="fu">unlist</span>( hfmt[[<span class="st">&quot;col_subtext&quot;</span>]]))</span>
@@ -2290,8 +2298,14 @@ background-color: inherit;
 <h1 class="tabset">YAML configuration files</h1>
 <pre><code># https://www.glyphicons.com/sets/basic/
 #General formods (FM) configuration across modules
-FM: 
+FM:
   include:
+    # This is where you can put files to include files in the working directory
+    # of the app. For the files listed below you shouldn&#39;t change the &#39;dest&#39;
+    # portion but you can change the source to use custom report templates.
+    # If relative paths are used they will be relative to
+    # the user directory (either the temp formods directory running in shiny
+    # or the top level of the zip file structure when saving the app state).
     files:
     - file:
         source: &#39;file.path(system.file(package=&quot;onbrand&quot;), &quot;templates&quot;, &quot;report.docx&quot;)&#39;
@@ -2305,20 +2319,20 @@ FM:
   # Some features (e.g. copy to clipboard) don&#39;t work when deployed
   deployed: FALSE
   #General code options for the modules
-  code: 
-    theme:           &quot;vibrant_ink&quot;    
+  code:
+    theme:           &quot;vibrant_ink&quot;
     showLineNumbers: TRUE
     # File name of the R script to contain generation code
-    gen_file: run_analysis.R   
+    gen_file: run_analysis.R
     # This is the preamble used in script generation. It goes on the
     # top. Feel free to add to it if you need to. Note that packages should be
-    # listed in the packages section at the same level. 
+    # listed in the packages section at the same level.
     gen_preamble: |-
       # formods automated output ------------------------------------------------
       # https://formods.ubiquity.tools/
       rm(list=ls())
     # Each module should have a packages section that lists the packages
-    # needed for code genereated for that module. 
+    # needed for code genereated for that module.
     packages: [&quot;onbrand&quot;, &quot;writexl&quot;]
   notifications:
     config:
@@ -2340,19 +2354,13 @@ FM:
         useFontAwesome: FALSE
         useIcon:        FALSE
         background:     &quot;#f0ac4d&quot;
-  reporting: 
+  reporting:
     # enabled here controls reporting for the app. Individual modules can be
     # controlled in their respective configuration files
     enabled: TRUE
     # The content_init section is used to initialize reports. You shouldn&#39;t
     # change the xlsx rpt but the docx and pptx rpt can be altered to
-    # use custom onbrand templates. The main thing is that you create an
-    # object called rpt with the appropriate template type in it. You can
-    # also do any preprocessing here as well such as adding default content or
-    # doing any placeholder assignments you might want to use. The paths can
-    # be absolute paths. If relative paths are used they will be relative to
-    # the user directory (either the temp formods directory running in shiny
-    # or the top level of the zip file structure when saving the app state).
+    # preprocess reports if you need to such as adding default.
     content_init:
       xlsx: |-
            rpt = list(summary = NULL,
@@ -2365,6 +2373,33 @@ FM:
            rpt  = onbrand::read_template(
              template = file.path(&quot;config&quot;, &quot;report.pptx&quot;),
              mapping  = file.path(&quot;config&quot;, &quot;report.yaml&quot;))
+    # Word template can contain placeholders. This is where you can put the
+    # default values for placeholders. There are some nuances associated with
+    # creating placeholders and you should see the documentation about them in
+    # the onbrand package to better understand that:
+    #
+    #   https://onbrand.ubiquity.tools/articles/Creating_Templated_Office_Workflows.html#placeholder-text
+    #
+    # Each element below contains the placeholder used and should contain a
+    # location and a value. For example the default document contains a header
+    # placeholder in the upper right that looks like:
+    #
+    #  ===HEADERRIGHT===
+    # The placeholder below is HEADERRIGHT, the location is header and by
+    # default we will replace it with nothing.
+    #
+    # These defaults can be overwritten in the save section.
+    #
+    phs:
+      - name:      &quot;HEADERRIGHT&quot;
+        location:  &quot;header&quot;
+        value:     &quot;&quot;
+      - name:      &quot;HEADERLEFT&quot;
+        location:  &quot;header&quot;
+        value:     &quot;&quot;
+      - name:      &quot;FOOTERLEFT&quot;
+        location:  &quot;footer&quot;
+        value:     &quot;&quot;
   ui:
     # See ?actionBttn for styles
     button_style: &quot;fill&quot;
@@ -2389,20 +2424,20 @@ FM:
     # Separator when showing more than three in a column. For exmaple if you
     # had a dataset with 1,2,3,4,5,6 and many_sep was &quot;,...,&quot; then it would
     # appear as &quot;1,...,6&quot;
-    many_sep: &quot;,⋅⋅⋅,&quot; 
+    many_sep: &quot;,⋅⋅⋅,&quot;
     # This controls the differences for different data types. Take the output
-    # of typeof(df$colname) and put an entry for that output here. 
+    # of typeof(df$colname) and put an entry for that output here.
     data_types:
-      character:   
+      character:
         color:    &quot;#DD4B39&quot;
         label:    &quot;text&quot;
-      double:         
+      double:
         color:    &quot;#3C8DBC&quot;
         label:    &quot;num&quot;
-      integer:        
+      integer:
         color:    &quot;#3C8DBC&quot;
         label:    &quot;num&quot;
-      other:          
+      other:
         color:    &quot;black&quot;
         label:    &quot;other&quot;
   labels:

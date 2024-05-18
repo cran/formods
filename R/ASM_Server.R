@@ -466,7 +466,25 @@ ASM_Server <- function(id,
         react_state[[id]] = state
       })
     }
+
+  #------------------------------------
+  toNotify <- reactive({
+    list(input$input_load_state)
   })
+  observeEvent(toNotify(), {
+    state = ASM_fetch_state(id           = id,
+                            input        = input,
+                            session      = session,
+                            FM_yaml_file = FM_yaml_file,
+                            MOD_yaml_file = MOD_yaml_file)
+    # Triggering optional notifications
+    notify_res =
+    FM_notify(state = state,
+     session     = session)
+  })
+
+  })
+
 }
 
 #'@export
@@ -555,7 +573,12 @@ ASM_fetch_state = function(id, input, session, FM_yaml_file, MOD_yaml_file){
            ") for saved state. Only .zip files allowed."))
     }
 
+
     if(ls_isgood){
+      FM_pause_screen(state   = state,
+                      message = state[["MC"]][["labels"]][["busy"]][["loading_state"]],
+                      session = session)
+
 
       test_checksum = digest::digest(file_path, algo=c("md5"))
 
@@ -578,16 +601,69 @@ ASM_fetch_state = function(id, input, session, FM_yaml_file, MOD_yaml_file){
 
           # Reading in the app state
           app_state = readRDS(rds_file)
+
           # Removing the rds_file so it wont be in the
           # new app state
           unlink(rds_file)
 
-          FM_le(state, "  Replacing app files")
           user_dir = FM_fetch_user_files_path(state)
-          unlink(user_dir, recursive = TRUE, force=TRUE)
-          file.rename(unpack_dir, user_dir)
+
+          # These are the files that are not replaced. Mainly the log file:
+          excludes = c(state[["yaml"]][["FM"]][["logging"]][["log_file"]])
+
+          # These are the files to delete:
+          fdel = dir(user_dir)
+          fdel = fdel[!(fdel %in% excludes)]
+
+          # This will just delete what is left in fdel
+          for(fname in fdel){
+            unlink(file.path(user_dir, fname), recursive = TRUE, force=TRUE)
+          }
+
+          FM_le(state, "  Replacing app files")
+          # These are the files from the upload that we want to keep
+          fkeep = dir(unpack_dir)
+          fkeep = fkeep[!(fkeep %in% excludes)]
+          for(fname in fkeep){
+            FM_le(state, paste0("   -> ", fname))
+            file.rename(from       = file.path(unpack_dir, fname),
+                        to         = file.path(user_dir,   fname))
+          }
+
+          # The shiny_token changes from session to session. When we load the
+          # old session we need to replace the token from the previous session
+          # with the token from the current session which should be stored in
+          # the state object.
+          FM_le(state, "  Token update")
+          for(asele in names(app_state)){
+            if("shiny_token" %in% names(app_state[[asele]])){
+              app_state[[asele]][["shiny_token"]] = state[["shiny_token"]]
+            }
+          }
+
+          # Applying any onload functions that were found
+          for(asele in names(app_state)){
+            if("shiny_token" %in% names(app_state[[asele]])){
+              tmp_state = app_state[[asele]]
+
+              # Next we look to see if there is an onload function for the
+              # current module:
+              tmp_MOD_TYPE = tmp_state[["MOD_TYPE"]]
+              MOD_FUNC     = paste0(tmp_MOD_TYPE, "_onload")
+              
+              if(exists(MOD_FUNC, mode="function")){
+                FM_le(state, paste0("  Processing ", MOD_FUNC, "() for module id: ", tmp_state[["id"]]))
+                # If there is we update the state and put it back in the
+                # app_state object
+                FUNC_CALL = paste0("tmp_state = ", MOD_FUNC,"(state = tmp_state, session=session)")
+                eval(parse(text=FUNC_CALL))
+                app_state[[asele]] = tmp_state
+              }
+            }
+          }
 
           FM_le(state, "  Replacing app state/setting holds")
+          FM_fetch_user_files_path(state)
           FM_set_app_state(session, app_state, set_holds=TRUE)
 
         }else {
@@ -604,7 +680,31 @@ ASM_fetch_state = function(id, input, session, FM_yaml_file, MOD_yaml_file){
         state[["ASM"]][["checksum"]] = test_checksum
         #---------------------------------------------
       }
+
+
+      FM_resume_screen(state   = state,
+                       session = session)
+
+     
+
     }
+
+    # Setting notifications for the user
+    if(ls_isgood){
+      state = FM_set_notification(
+        state       = state, 
+        notify_text =  state[["MC"]][["labels"]][["load_success"]],
+        notify_id   = "ASM load failed", 
+        type        = "success")
+
+    } else {
+      state = FM_set_notification(
+        state       = state, 
+        notify_text =  state[["MC"]][["errors"]][["load_failed"]],
+        notify_id   = "ASM load failed", 
+        type        = "failure")
+    }
+
     # Passing any messages back to the user
     state = FM_set_ui_msg(state, msgs)
   }

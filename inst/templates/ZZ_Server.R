@@ -312,13 +312,13 @@
      #   circle  = FALSE,
      #   status  = "primary btn-custom-===zz===",
      #   icon    = icon("layer-group", lib="font-awesome"),
-     #   tooltip = tooltipOptions(title = state[["MC"]][["tooltips"]][["elements"]]))
+     #   tooltip = shinyWidgets::tooltipOptions(title = state[["MC"]][["tooltips"]][["elements"]]))
      #)
 
       uiele = tagList(
         div(style="display:inline-block", "Place ===ELEMENT=== name, attributes and inputs here."),
         tags$br(),
-        div(style="display:inline-block", htmlOutput(NS(id, "ui_===zz===_msg")))
+        div(style="display:inline-block", verbatimTextOutput(NS(id, "ui_===zz===_msg")))
       )
 
       # We only show the clip button if it's enabled
@@ -438,9 +438,11 @@
     })
     #------------------------------------
     # Removing holds
+    # The react_state[[id_ASM]] is required in order to
+    # load analyses using the application state manager
     remove_hold_listen  <- reactive({
         list(
-           # react_state[[id_ASM]])
+             react_state[[id_ASM]],
            # input$button_clk_new,
            # input$button_clk_del,
            # input$button_clk_copy,
@@ -1216,3 +1218,27 @@ state}
   }
 
 state}
+
+
+#'@export
+#'@title Processes State After Loading
+#'@description When loading a saved analysis, this will process the state
+#'object to account for differences that may apply between servers.
+#'@param state ===ZZ=== state from \code{===ZZ===_fetch_state()}
+#'@param session Shiny session variable
+#'@return State object with updates made to the state object
+#'@examples
+#' sess_res = ===ZZ===_test_mksession(session=list())
+#' session = sess_res$session
+#' state   = sess_res$state
+#' state = ===ZZ===_onload(state, session)
+===ZZ===_onload     = function(state, session){
+
+  # Put any post processing you would use after loading here. If you do not
+  # have any you can leave this function as a passthrough for the state object
+  # or just delete it.
+
+state}
+
+
+
