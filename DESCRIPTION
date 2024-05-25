@@ -1,13 +1,13 @@
 Package: formods
 Type: Package
 Title: 'Shiny' Modules for General Tasks
-Version: 0.1.5
+Version: 0.1.6
 Authors@R: c(person("John", "Harrold",
                     role    = c("aut", "cre"),
                     email   = "john.m.harrold@gmail.com",
                     comment = c(ORCID="0000-0003-2052-4373")))
 Maintainer: John Harrold <john.m.harrold@gmail.com>
-Description: 'Shiny' apps can often make use of the same key elements, this package provides modules for common tasks (data upload, wrangling data, figure generation and saving the app state). These modules can react and interact as well as generate code to create reproducible analyses.
+Description: 'Shiny' apps can often make use of the same key elements, this package provides modules for common tasks (data upload, wrangling data, figure generation and saving the app state), and also a framework for developing. These modules can react and interact as well as generate code to create reproducible analyses.
 License: BSD_2_clause + file LICENSE
 BugReports: https://github.com/john-harrold/formods/issues
 URL: https://formods.ubiquity.tools/
@@ -23,7 +23,7 @@ RoxygenNote: 7.3.1
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 NeedsCompilation: no
-Packaged: 2024-05-17 23:55:23 UTC; jmh
+Packaged: 2024-05-25 00:00:33 UTC; jmh
 Author: John Harrold [aut, cre] (<https://orcid.org/0000-0003-2052-4373>)
 Repository: CRAN
-Date/Publication: 2024-05-18 03:30:04 UTC
+Date/Publication: 2024-05-25 02:40:02 UTC

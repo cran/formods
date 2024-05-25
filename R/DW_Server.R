@@ -1329,6 +1329,7 @@ DW_Server <- function(id,
              input$button_dw_copy,
              input$button_dw_save,
              input$hot_fg_elements,
+             input$hot_dw_elements,
              react_state[[id_ASM]])
       })
       # This updates the reaction state:
@@ -1342,7 +1343,25 @@ DW_Server <- function(id,
                                react_state     = react_state)
 
         FM_le(state, "reaction state updated")
-        #react_state[[id]] = state
+
+        # Checking if there are exportable datasets:
+        hasds = FALSE
+        dw_views    = names(state[["DW"]][["views"]])
+        for(dw_view in dw_views){
+          tmp_checksum      = state[["DW"]][["views"]][[dw_view]][["checksum"]]
+          tmp_object_name   = state[["DW"]][["views"]][[dw_view]][["view_ds_object_name"]]
+          tmp_contents      = state[["DW"]][["views"]][[dw_view]][["WDS"]]
+          tmp_et            = state[["DW"]][["views"]][[dw_view]][["elements_table"]]
+          if(!is.null(tmp_checksum)    &
+             !is.null(tmp_object_name) &
+             !is.null(tmp_et)          &
+             !is.null(tmp_contents)){
+             hasds = TRUE
+          }
+        }
+        react_state[[id]][["DW"]][["hasds"]]    = hasds
+
+        # Module checksum
         react_state[[id]][["DW"]][["checksum"]] = state[["DW"]][["checksum"]]
       }, priority=99)
     }
@@ -1599,6 +1618,7 @@ DW_fetch_state = function(id,                    input,     session,
               # Saving the NEW_ET over the elements_table in the state
               current_view[["elements_table"]]  = NEW_ET
               state = DW_set_current_view(state, current_view)
+              FM_le(state, "wrangling element deleted")
             }
           }
         }
@@ -2610,6 +2630,7 @@ DW_fetch_ds = function(state){
     tmp_key           = state[["DW"]][["views"]][[dw_view]][["key"]]
     tmp_code_previous = state[["DW"]][["views"]][[dw_view]][["code_previous"]]
     tmp_contents      = state[["DW"]][["views"]][[dw_view]][["WDS"]]
+    tmp_et            = state[["DW"]][["views"]][[dw_view]][["elements_table"]]
 
     # The module code is the two chuncks pasted together
     modcode = paste(c(tmp_code), collapse="\n")
@@ -2623,6 +2644,7 @@ DW_fetch_ds = function(state){
     # If the view is complete we append it to the ds list
     if(!is.null(tmp_checksum)    &
        !is.null(tmp_object_name) &
+       !is.null(tmp_et)          &
        !is.null(tmp_contents)){
 
       TMPDS = NEWDS
@@ -3057,7 +3079,8 @@ DW_test_mksession = function(session, id = "DW", id_UD="UD"){
   }
 
   # Required for proper reaction:
-  rsc[[id]]  = list(DW = list(checksum=state[["DW"]][["checksum"]]))
+  rsc[[id]]  = list(DW = list(checksum=state[["DW"]][["checksum"]],
+                              hasds = TRUE))
 
   res = list(
     isgood  = isgood,
