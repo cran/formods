@@ -1522,7 +1522,7 @@ overflow: visible;
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -1533,7 +1533,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -1857,10 +1857,10 @@ below assumes you are creating this module for a package called
 repository. Say that this module is used to produce
 <code>widgets</code>, the short name is <code>MM</code> which stands for
 <code>My Module</code>:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">use_formods</span>(<span class="at">SN          =</span> <span class="st">&quot;MM&quot;</span>,</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">Module_Name =</span> <span class="st">&quot;My Module&quot;</span>,</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">element     =</span> <span class="st">&quot;widgets&quot;</span>, </span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">package     =</span> <span class="st">&quot;mypackage&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">use_formods</span>(<span class="at">SN          =</span> <span class="st">&quot;MM&quot;</span>,</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>            <span class="at">Module_Name =</span> <span class="st">&quot;My Module&quot;</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>            <span class="at">element     =</span> <span class="st">&quot;widgets&quot;</span>, </span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>            <span class="at">package     =</span> <span class="st">&quot;mypackage&quot;</span>)</span></code></pre></div>
 <ul>
 <li><code>MM_module_components.R</code> - An app that can be used for
 testing the module and highlighting the different UI elements that are
@@ -2073,28 +2073,28 @@ for display for a given data frame.</li>
 <p>The examples below require a Shiny session variable and a formods
 state object. Here we create some examples and other objects needed to
 demonstrate the functions below.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(formods)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># This creates the state and session objects</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>sess_res <span class="ot">=</span> <span class="fu">UD_test_mksession</span>(<span class="at">session=</span><span class="fu">list</span>())</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; → UD: including file</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; → UD:   source: file.path(system.file(package=&quot;onbrand&quot;), &quot;templates&quot;, &quot;report.docx&quot;)</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; → UD:   dest:   file.path(&quot;config&quot;,&quot;report.docx&quot;)</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; → UD: including file</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; → UD:   source: file.path(system.file(package=&quot;onbrand&quot;), &quot;templates&quot;, &quot;report.pptx&quot;)</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; → UD:   dest:   file.path(&quot;config&quot;,&quot;report.pptx&quot;)</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; → UD: including file</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; → UD:   source: file.path(system.file(package=&quot;onbrand&quot;), &quot;templates&quot;, &quot;report.yaml&quot;)</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; → UD:   dest:   file.path(&quot;config&quot;,&quot;report.yaml&quot;)</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; → UD: State initialized</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; → UD: module checksum updated:897d952fecbc804999396a96f9df4b20</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>state    <span class="ot">=</span> sess_res<span class="sc">$</span>state</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>session  <span class="ot">=</span> sess_res<span class="sc">$</span>session</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Here we load an example dataset into the df object.</span></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>data_file_local <span class="ot">=</span>  <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;formods&quot;</span>, <span class="st">&quot;test_data&quot;</span>, <span class="st">&quot;TEST_DATA.xlsx&quot;</span>)</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>sheet           <span class="ot">=</span> <span class="st">&quot;DATA&quot;</span></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>df <span class="ot">=</span> readxl<span class="sc">::</span><span class="fu">read_excel</span>(<span class="at">path=</span>data_file_local, <span class="at">sheet=</span>sheet)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(formods)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="co"># This creates the state and session objects</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>sess_res <span class="ot">=</span> <span class="fu">UD_test_mksession</span>(<span class="at">session=</span><span class="fu">list</span>())</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt; → UD: including file</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt; → UD:   source: file.path(system.file(package=&quot;onbrand&quot;), &quot;templates&quot;, &quot;report.docx&quot;)</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt; → UD:   dest:   file.path(&quot;config&quot;,&quot;report.docx&quot;)</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt; → UD: including file</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt; → UD:   source: file.path(system.file(package=&quot;onbrand&quot;), &quot;templates&quot;, &quot;report.pptx&quot;)</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt; → UD:   dest:   file.path(&quot;config&quot;,&quot;report.pptx&quot;)</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt; → UD: including file</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt; → UD:   source: file.path(system.file(package=&quot;onbrand&quot;), &quot;templates&quot;, &quot;report.yaml&quot;)</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt; → UD:   dest:   file.path(&quot;config&quot;,&quot;report.yaml&quot;)</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt; → UD: State initialized</span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt; → UD: module checksum updated:897d952fecbc804999396a96f9df4b20</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>state    <span class="ot">=</span> sess_res<span class="sc">$</span>state</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>session  <span class="ot">=</span> sess_res<span class="sc">$</span>session</span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co"># Here we load an example dataset into the df object.</span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>data_file_local <span class="ot">=</span>  <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;formods&quot;</span>, <span class="st">&quot;test_data&quot;</span>, <span class="st">&quot;TEST_DATA.xlsx&quot;</span>)</span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>sheet           <span class="ot">=</span> <span class="st">&quot;DATA&quot;</span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>df <span class="ot">=</span> readxl<span class="sc">::</span><span class="fu">read_excel</span>(<span class="at">path=</span>data_file_local, <span class="at">sheet=</span>sheet)</span></code></pre></div>
 <div id="setting-holds-on-ui-elements" class="section level2">
 <h2>Setting holds on UI elements</h2>
 <p>The mechanics of the fetch state functions mean that each time a
@@ -2120,25 +2120,25 @@ refreshed with the new text value populated in to <code>my_text</code>
 (with the appropriate reactions set). This is done with an observeEvent
 that is triggered after everything else (with a priority of -100
 below):</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>remove_hold_listen  <span class="ot">&lt;-</span> <span class="fu">reactive</span>({</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(input<span class="sc">$</span>my_selection)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">observeEvent</span>(<span class="fu">remove_hold_listen</span>(), {</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Once the UI has been regenerated we</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># remove any holds for this module</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  state <span class="ot">=</span> <span class="fu">MM_fetch_state</span>(<span class="at">id              =</span> id,</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>                         <span class="at">input           =</span> input,</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>                         <span class="at">session         =</span> session,</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>                         <span class="at">FM_yaml_file    =</span> FM_yaml_file,</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>                         <span class="at">MOD_yaml_file   =</span> MOD_yaml_file,</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>                         <span class="at">react_state     =</span> react_state)</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">FM_le</span>(state, <span class="st">&quot;removing holds&quot;</span>)</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Removing all holds</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(hname <span class="cf">in</span> <span class="fu">names</span>(state[[<span class="st">&quot;MM&quot;</span>]][[<span class="st">&quot;ui_hold&quot;</span>]])){</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">remove_hold</span>(state, session, hname)</span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>}, <span class="at">priority =</span> <span class="sc">-</span><span class="dv">100</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>remove_hold_listen  <span class="ot">&lt;-</span> <span class="fu">reactive</span>({</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="fu">list</span>(input<span class="sc">$</span>my_selection)</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>})</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="fu">observeEvent</span>(<span class="fu">remove_hold_listen</span>(), {</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="co"># Once the UI has been regenerated we</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="co"># remove any holds for this module</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  state <span class="ot">=</span> <span class="fu">MM_fetch_state</span>(<span class="at">id              =</span> id,</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>                         <span class="at">input           =</span> input,</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>                         <span class="at">session         =</span> session,</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>                         <span class="at">FM_yaml_file    =</span> FM_yaml_file,</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>                         <span class="at">MOD_yaml_file   =</span> MOD_yaml_file,</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>                         <span class="at">react_state     =</span> react_state)</span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>  <span class="fu">FM_le</span>(state, <span class="st">&quot;removing holds&quot;</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>  <span class="co"># Removing all holds</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>  <span class="cf">for</span>(hname <span class="cf">in</span> <span class="fu">names</span>(state[[<span class="st">&quot;MM&quot;</span>]][[<span class="st">&quot;ui_hold&quot;</span>]])){</span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>    <span class="fu">remove_hold</span>(state, session, hname)</span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>  }</span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>}, <span class="at">priority =</span> <span class="sc">-</span><span class="dv">100</span>)</span></code></pre></div>
 <p>The <code>remove_hold_listen</code> object should contain all of the
 inputs that create holds.</p>
 </div>
@@ -2147,41 +2147,41 @@ inputs that create holds.</p>
 <p>If you want to tables and pulldown menues based on the types of data
 in each column you can use the <code>FM_fetch_data_format()</code>
 function.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>hfmt <span class="ot">=</span> <span class="fu">FM_fetch_data_format</span>(df, state)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Descriptive headers </span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">as.vector</span>(<span class="fu">unlist</span>( hfmt[[<span class="st">&quot;col_heads&quot;</span>]])))</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;&lt;span style=&#39;color:#3C8DBC&#39;&gt;&lt;b&gt;ID&lt;/b&gt;&lt;br/&gt;&lt;font size=&#39;-3&#39;&gt;num&lt;/font&gt;&lt;/span&gt;&quot;      </span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [2] &quot;&lt;span style=&#39;color:#3C8DBC&#39;&gt;&lt;b&gt;TIME_DY&lt;/b&gt;&lt;br/&gt;&lt;font size=&#39;-3&#39;&gt;num&lt;/font&gt;&lt;/span&gt;&quot; </span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [3] &quot;&lt;span style=&#39;color:#3C8DBC&#39;&gt;&lt;b&gt;TIME_HR&lt;/b&gt;&lt;br/&gt;&lt;font size=&#39;-3&#39;&gt;num&lt;/font&gt;&lt;/span&gt;&quot; </span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4] &quot;&lt;span style=&#39;color:#3C8DBC&#39;&gt;&lt;b&gt;NTIME_DY&lt;/b&gt;&lt;br/&gt;&lt;font size=&#39;-3&#39;&gt;num&lt;/font&gt;&lt;/span&gt;&quot;</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [5] &quot;&lt;span style=&#39;color:#3C8DBC&#39;&gt;&lt;b&gt;NTIME_HR&lt;/b&gt;&lt;br/&gt;&lt;font size=&#39;-3&#39;&gt;num&lt;/font&gt;&lt;/span&gt;&quot;</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [6] &quot;&lt;span style=&#39;color:#3C8DBC&#39;&gt;&lt;b&gt;TIME&lt;/b&gt;&lt;br/&gt;&lt;font size=&#39;-3&#39;&gt;num&lt;/font&gt;&lt;/span&gt;&quot;</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Subtext</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">as.vector</span>(<span class="fu">unlist</span>( hfmt[[<span class="st">&quot;col_subtext&quot;</span>]])))</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;num: 1,⋅⋅⋅,360&quot;  &quot;num: 0,⋅⋅⋅,84&quot;   &quot;num: 0,⋅⋅⋅,2016&quot; &quot;num: 0,⋅⋅⋅,42&quot;  </span></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [5] &quot;num: 0,⋅⋅⋅,1008&quot; &quot;num: 0,⋅⋅⋅,2016&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>hfmt <span class="ot">=</span> <span class="fu">FM_fetch_data_format</span>(df, state)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co"># Descriptive headers </span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">as.vector</span>(<span class="fu">unlist</span>( hfmt[[<span class="st">&quot;col_heads&quot;</span>]])))</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt; [1] &quot;&lt;span style=&#39;color:#3C8DBC&#39;&gt;&lt;b&gt;ID&lt;/b&gt;&lt;br/&gt;&lt;font size=&#39;-3&#39;&gt;num&lt;/font&gt;&lt;/span&gt;&quot;      </span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; [2] &quot;&lt;span style=&#39;color:#3C8DBC&#39;&gt;&lt;b&gt;TIME_DY&lt;/b&gt;&lt;br/&gt;&lt;font size=&#39;-3&#39;&gt;num&lt;/font&gt;&lt;/span&gt;&quot; </span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; [3] &quot;&lt;span style=&#39;color:#3C8DBC&#39;&gt;&lt;b&gt;TIME_HR&lt;/b&gt;&lt;br/&gt;&lt;font size=&#39;-3&#39;&gt;num&lt;/font&gt;&lt;/span&gt;&quot; </span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; [4] &quot;&lt;span style=&#39;color:#3C8DBC&#39;&gt;&lt;b&gt;NTIME_DY&lt;/b&gt;&lt;br/&gt;&lt;font size=&#39;-3&#39;&gt;num&lt;/font&gt;&lt;/span&gt;&quot;</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt; [5] &quot;&lt;span style=&#39;color:#3C8DBC&#39;&gt;&lt;b&gt;NTIME_HR&lt;/b&gt;&lt;br/&gt;&lt;font size=&#39;-3&#39;&gt;num&lt;/font&gt;&lt;/span&gt;&quot;</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; [6] &quot;&lt;span style=&#39;color:#3C8DBC&#39;&gt;&lt;b&gt;TIME&lt;/b&gt;&lt;br/&gt;&lt;font size=&#39;-3&#39;&gt;num&lt;/font&gt;&lt;/span&gt;&quot;</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co"># Subtext</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">as.vector</span>(<span class="fu">unlist</span>( hfmt[[<span class="st">&quot;col_subtext&quot;</span>]])))</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; [1] &quot;num: 1,⋅⋅⋅,360&quot;  &quot;num: 0,⋅⋅⋅,84&quot;   &quot;num: 0,⋅⋅⋅,2016&quot; &quot;num: 0,⋅⋅⋅,42&quot;  </span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; [5] &quot;num: 0,⋅⋅⋅,1008&quot; &quot;num: 0,⋅⋅⋅,2016&quot;</span></span></code></pre></div>
 <p>The custom headers can be used with the <code>{rhandsontable}</code>
 package.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>hot <span class="ot">=</span> rhandsontable<span class="sc">::</span><span class="fu">rhandsontable</span>(</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(df),</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">width      =</span> <span class="st">&quot;100%&quot;</span>,</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">height     =</span> <span class="st">&quot;100%&quot;</span>,</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">colHeaders =</span> <span class="fu">as.vector</span>(<span class="fu">unlist</span>(hfmt[[<span class="st">&quot;col_heads&quot;</span>]])),</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">rowHeaders =</span> <span class="cn">NULL</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
-<div id="htmlwidget-6a0d594a538026a9729e" style="width:100%;height:100%;" class="rhandsontable html-widget"></div>
-<script type="application/json" data-for="htmlwidget-6a0d594a538026a9729e">{"x":{"data":[{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":3000000,"DV":0,"RECDESC":"dose","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"Ac","DUR":0,"EVID":1,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":0,"DV":1250,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":0,"DV":0,"RECDESC":"C_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"C_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":1,"TIME_HR":24,"NTIME_DY":1,"NTIME_HR":24,"TIME":24,"AMT":0,"DV":1647,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":1,"TIME_HR":24,"NTIME_DY":1,"NTIME_HR":24,"TIME":24,"AMT":0,"DV":690.5,"RECDESC":"C_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"C_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":2,"TIME_HR":48,"NTIME_DY":2,"NTIME_HR":48,"TIME":48,"AMT":0,"DV":1947,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1}],"rClass":["tbl_df","tbl","data.frame"],"rColClasses":{"ID":"numeric","TIME_DY":"numeric","TIME_HR":"numeric","NTIME_DY":"numeric","NTIME_HR":"numeric","TIME":"numeric","AMT":"numeric","DV":"numeric","RECDESC":"character","DOSE":"numeric","DOSE_STR":"character","Cohort":"character","ROUTE":"character","WT":"numeric","SUBTYPE":"character","SEX":"character","F1":"numeric","ka":"numeric","CL":"numeric","Vc":"numeric","Vp":"numeric","Q":"numeric","BM_IC":"numeric","kdeg_BM":"numeric","Emax":"numeric","EC50":"numeric","CMT":"character","DUR":"numeric","EVID":"numeric","NDose":"character","DOSE_NUM":"numeric","SUBTYPE_ID":"numeric","SEX_ID":"numeric"},"rColnames":["ID","TIME_DY","TIME_HR","NTIME_DY","NTIME_HR","TIME","AMT","DV","RECDESC","DOSE","DOSE_STR","Cohort","ROUTE","WT","SUBTYPE","SEX","F1","ka","CL","Vc","Vp","Q","BM_IC","kdeg_BM","Emax","EC50","CMT","DUR","EVID","NDose","DOSE_NUM","SUBTYPE_ID","SEX_ID"],"rColHeaders":["ID","TIME_DY","TIME_HR","NTIME_DY","NTIME_HR","TIME","AMT","DV","RECDESC","DOSE","DOSE_STR","Cohort","ROUTE","WT","SUBTYPE","SEX","F1","ka","CL","Vc","Vp","Q","BM_IC","kdeg_BM","Emax","EC50","CMT","DUR","EVID","NDose","DOSE_NUM","SUBTYPE_ID","SEX_ID"],"rRowHeaders":null,"rDataDim":[6,33],"selectCallback":false,"colHeaders":["<span style='color:#3C8DBC'><b>ID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME_DY<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME_HR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>NTIME_DY<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>NTIME_HR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>AMT<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>DV<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>RECDESC<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DOSE<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>DOSE_STR<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>Cohort<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>ROUTE<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>WT<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>SUBTYPE<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>SEX<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>F1<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>ka<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>CL<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Vc<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Vp<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Q<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>BM_IC<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>kdeg_BM<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Emax<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>EC50<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>CMT<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DUR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>EVID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>NDose<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DOSE_NUM<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>SUBTYPE_ID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>SEX_ID<\/b><br/><font size='-3'>num<\/font><\/span>"],"rowHeaders":null,"columns":[{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null}],"width":"100%","height":"100%","debug":0,"search":false,"stretchH":"none","comments":false,"contextMenu":{"items":{"row_above":[],"row_below":[],"remove_row":[],"hsep3":{"name":"---------"},"undo":[],"redo":[],"hsep4":{"name":"---------"},"alignment":[]}}},"evals":["columns.0.renderer","columns.1.renderer","columns.2.renderer","columns.3.renderer","columns.4.renderer","columns.5.renderer","columns.6.renderer","columns.7.renderer","columns.8.renderer","columns.9.renderer","columns.10.renderer","columns.11.renderer","columns.12.renderer","columns.13.renderer","columns.14.renderer","columns.15.renderer","columns.16.renderer","columns.17.renderer","columns.18.renderer","columns.19.renderer","columns.20.renderer","columns.21.renderer","columns.22.renderer","columns.23.renderer","columns.24.renderer","columns.25.renderer","columns.26.renderer","columns.27.renderer","columns.28.renderer","columns.29.renderer","columns.30.renderer","columns.31.renderer","columns.32.renderer"],"jsHooks":[]}</script>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>hot <span class="ot">=</span> rhandsontable<span class="sc">::</span><span class="fu">rhandsontable</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="fu">head</span>(df),</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">width      =</span> <span class="st">&quot;100%&quot;</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="at">height     =</span> <span class="st">&quot;100%&quot;</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="at">colHeaders =</span> <span class="fu">as.vector</span>(<span class="fu">unlist</span>(hfmt[[<span class="st">&quot;col_heads&quot;</span>]])),</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="at">rowHeaders =</span> <span class="cn">NULL</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  )</span></code></pre></div>
+<div id="htmlwidget-545a83832c37876b546e" style="width:100%;height:100%;" class="rhandsontable html-widget"></div>
+<script type="application/json" data-for="htmlwidget-545a83832c37876b546e">{"x":{"data":[{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":3000000,"DV":0,"RECDESC":"dose","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"Ac","DUR":0,"EVID":1,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":0,"DV":1250,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":0,"TIME_HR":0,"NTIME_DY":0,"NTIME_HR":0,"TIME":0,"AMT":0,"DV":0,"RECDESC":"C_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"C_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":1,"TIME_HR":24,"NTIME_DY":1,"NTIME_HR":24,"TIME":24,"AMT":0,"DV":1647,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":1,"TIME_HR":24,"NTIME_DY":1,"NTIME_HR":24,"TIME":24,"AMT":0,"DV":690.5,"RECDESC":"C_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"C_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1},{"ID":1,"TIME_DY":2,"TIME_HR":48,"NTIME_DY":2,"NTIME_HR":48,"TIME":48,"AMT":0,"DV":1947,"RECDESC":"BM_ng_ml","DOSE":3000000,"DOSE_STR":"3 mg","Cohort":"SD 3 mg IV","ROUTE":"IV","WT":67.9,"SUBTYPE":"PT","SEX":"Female","F1":0.744,"ka":0.449,"CL":0.25,"Vc":3.67,"Vp":3.77,"Q":0.325,"BM_IC":1250,"kdeg_BM":0.1,"Emax":190,"EC50":300,"CMT":"BM_ng_ml","DUR":0,"EVID":0,"NDose":"SD","DOSE_NUM":1,"SUBTYPE_ID":1,"SEX_ID":1}],"rClass":["tbl_df","tbl","data.frame"],"rColClasses":{"ID":"numeric","TIME_DY":"numeric","TIME_HR":"numeric","NTIME_DY":"numeric","NTIME_HR":"numeric","TIME":"numeric","AMT":"numeric","DV":"numeric","RECDESC":"character","DOSE":"numeric","DOSE_STR":"character","Cohort":"character","ROUTE":"character","WT":"numeric","SUBTYPE":"character","SEX":"character","F1":"numeric","ka":"numeric","CL":"numeric","Vc":"numeric","Vp":"numeric","Q":"numeric","BM_IC":"numeric","kdeg_BM":"numeric","Emax":"numeric","EC50":"numeric","CMT":"character","DUR":"numeric","EVID":"numeric","NDose":"character","DOSE_NUM":"numeric","SUBTYPE_ID":"numeric","SEX_ID":"numeric"},"rColnames":["ID","TIME_DY","TIME_HR","NTIME_DY","NTIME_HR","TIME","AMT","DV","RECDESC","DOSE","DOSE_STR","Cohort","ROUTE","WT","SUBTYPE","SEX","F1","ka","CL","Vc","Vp","Q","BM_IC","kdeg_BM","Emax","EC50","CMT","DUR","EVID","NDose","DOSE_NUM","SUBTYPE_ID","SEX_ID"],"rColHeaders":["ID","TIME_DY","TIME_HR","NTIME_DY","NTIME_HR","TIME","AMT","DV","RECDESC","DOSE","DOSE_STR","Cohort","ROUTE","WT","SUBTYPE","SEX","F1","ka","CL","Vc","Vp","Q","BM_IC","kdeg_BM","Emax","EC50","CMT","DUR","EVID","NDose","DOSE_NUM","SUBTYPE_ID","SEX_ID"],"rRowHeaders":null,"rDataDim":[6,33],"selectCallback":false,"colHeaders":["<span style='color:#3C8DBC'><b>ID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME_DY<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME_HR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>NTIME_DY<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>NTIME_HR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>TIME<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>AMT<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>DV<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>RECDESC<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DOSE<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>DOSE_STR<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>Cohort<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>ROUTE<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>WT<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>SUBTYPE<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#DD4B39'><b>SEX<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>F1<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>ka<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>CL<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Vc<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Vp<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Q<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>BM_IC<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>kdeg_BM<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>Emax<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>EC50<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>CMT<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DUR<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>EVID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#DD4B39'><b>NDose<\/b><br/><font size='-3'>text<\/font><\/span>","<span style='color:#3C8DBC'><b>DOSE_NUM<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>SUBTYPE_ID<\/b><br/><font size='-3'>num<\/font><\/span>","<span style='color:#3C8DBC'><b>SEX_ID<\/b><br/><font size='-3'>num<\/font><\/span>"],"rowHeaders":null,"columns":[{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"text","renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null},{"type":"numeric","numericFormat":{"pattern":"0.00"},"renderer":"customRenderer","default":null}],"width":"100%","height":"100%","debug":0,"search":false,"stretchH":"none","comments":false,"contextMenu":{"items":{"row_above":[],"row_below":[],"remove_row":[],"hsep3":{"name":"---------"},"undo":[],"redo":[],"hsep4":{"name":"---------"},"alignment":[]}}},"evals":["columns.0.renderer","columns.1.renderer","columns.2.renderer","columns.3.renderer","columns.4.renderer","columns.5.renderer","columns.6.renderer","columns.7.renderer","columns.8.renderer","columns.9.renderer","columns.10.renderer","columns.11.renderer","columns.12.renderer","columns.13.renderer","columns.14.renderer","columns.15.renderer","columns.16.renderer","columns.17.renderer","columns.18.renderer","columns.19.renderer","columns.20.renderer","columns.21.renderer","columns.22.renderer","columns.23.renderer","columns.24.renderer","columns.25.renderer","columns.26.renderer","columns.27.renderer","columns.28.renderer","columns.29.renderer","columns.30.renderer","columns.31.renderer","columns.32.renderer"],"jsHooks":[]}</script>
 <p>To add subtext to a selection widget in Shiny you need to use the
 <code>{shinyWidgets}</code> package.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>sel_subtext <span class="ot">=</span> <span class="fu">as.vector</span>(<span class="fu">unlist</span>( hfmt[[<span class="st">&quot;col_subtext&quot;</span>]]))</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(shinyWidgets)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>shinyWidgets<span class="sc">::</span><span class="fu">pickerInput</span>(</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">inputId    =</span> <span class="st">&quot;select_example&quot;</span>,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">choices    =</span> <span class="fu">names</span>(df),</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">label      =</span> <span class="st">&quot;Select with subtext&quot;</span>,</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">choicesOpt =</span> <span class="fu">list</span>(<span class="at">subtext =</span> sel_subtext))</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>sel_subtext <span class="ot">=</span> <span class="fu">as.vector</span>(<span class="fu">unlist</span>( hfmt[[<span class="st">&quot;col_subtext&quot;</span>]]))</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">library</span>(shinyWidgets)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>shinyWidgets<span class="sc">::</span><span class="fu">pickerInput</span>(</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>    <span class="at">inputId    =</span> <span class="st">&quot;select_example&quot;</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>    <span class="at">choices    =</span> <span class="fu">names</span>(df),</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>    <span class="at">label      =</span> <span class="st">&quot;Select with subtext&quot;</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>    <span class="at">choicesOpt =</span> <span class="fu">list</span>(<span class="at">subtext =</span> sel_subtext))</span></code></pre></div>
 <p>To alter the formats shown here you need to edit the
 <code>formods.yaml</code> configuration file and look at the
 <code>FM</code><span class="math inline">\(\rightarrow\)</span><code>data_meta</code>
@@ -2196,33 +2196,33 @@ done in a centralized fashion where notifications are added to the state
 object as user information is processed. This will set a notification
 called <code>Example Notification</code>. Along with that a timestamp is
 set:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>   state <span class="ot">=</span> <span class="fu">FM_set_notification</span>(state, <span class="st">&quot;Something happened&quot;</span>, <span class="st">&quot;Example Notification&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>   state <span class="ot">=</span> <span class="fu">FM_set_notification</span>(state, <span class="st">&quot;Something happened&quot;</span>, <span class="st">&quot;Example Notification&quot;</span>)</span></code></pre></div>
 <p>That timestamp is used to track and prevent the notification from
 being shown multiple times. Next you need to setup the reactions to
 display the notifications. Here you can create a reactive expression of
 the inputs that will lead to a notification:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>    toNotify <span class="ot">&lt;-</span> <span class="fu">reactive</span>({</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>      <span class="fu">list</span>(input<span class="sc">$</span>input1,</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>           input<span class="sc">$</span>input2)</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    })</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>    toNotify <span class="ot">&lt;-</span> <span class="fu">reactive</span>({</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>      <span class="fu">list</span>(input<span class="sc">$</span>input1,</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>           input<span class="sc">$</span>input2)</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>    })</span></code></pre></div>
 <p>Next you use <code>observeEvent()</code> with that reactive
 expression to trigger notifications. You need to use the fetch state
 function for that molecule to get the state object with the
 notifications. Then <code>FM_notify()</code> will be called an any
 unprocessed notifications will be displayed:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>    <span class="fu">observeEvent</span>(<span class="fu">toNotify</span>(), {</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>      state <span class="ot">=</span> <span class="fu">MM_fetch_state</span>(<span class="at">id              =</span> id,</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">input           =</span> input,</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                             <span class="at">session         =</span> session,</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">FM_yaml_file    =</span> FM_yaml_file,</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>                             <span class="at">MOD_yaml_file   =</span> MOD_yaml_file,</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>                             <span class="at">react_state     =</span> react_state)</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>      <span class="co"># Triggering optional notifications</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>      notify_res <span class="ot">=</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>      <span class="fu">FM_notify</span>(<span class="at">state    =</span> state,</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>                <span class="at">session  =</span> session)</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    })</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>    <span class="fu">observeEvent</span>(<span class="fu">toNotify</span>(), {</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>      state <span class="ot">=</span> <span class="fu">MM_fetch_state</span>(<span class="at">id              =</span> id,</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>                             <span class="at">input           =</span> input,</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>                             <span class="at">session         =</span> session,</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>                             <span class="at">FM_yaml_file    =</span> FM_yaml_file,</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>                             <span class="at">MOD_yaml_file   =</span> MOD_yaml_file,</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>                             <span class="at">react_state     =</span> react_state)</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>      <span class="co"># Triggering optional notifications</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>      notify_res <span class="ot">=</span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>      <span class="fu">FM_notify</span>(<span class="at">state    =</span> state,</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>                <span class="at">session  =</span> session)</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>    })</span></code></pre></div>
 </div>
 <div id="adding-tooltips" class="section level2">
 <h2>Adding tooltips</h2>
@@ -2231,12 +2231,12 @@ unprocessed notifications will be displayed:</p>
 would use the <code>FM_add_ui_tooltip()</code> function. For example to
 add the tool tip, <code>You need to type harder!</code> to a text input
 you would do the following:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>uiele <span class="ot">=</span> shiny<span class="sc">::</span><span class="fu">textInput</span>(</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>          <span class="at">inputId =</span> <span class="st">&quot;some_text&quot;</span>, </span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">label   =</span> <span class="st">&quot;You need to type harder!&quot;</span>)</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>uiele <span class="ot">=</span> <span class="fu">FM_add_ui_tooltip</span>(state, uiele, </span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">tooltip  =</span> <span class="st">&quot;This is a tooltip&quot;</span>,</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">position =</span> <span class="st">&quot;left&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>uiele <span class="ot">=</span> shiny<span class="sc">::</span><span class="fu">textInput</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>          <span class="at">inputId =</span> <span class="st">&quot;some_text&quot;</span>, </span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>          <span class="at">label   =</span> <span class="st">&quot;You need to type harder!&quot;</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>uiele <span class="ot">=</span> <span class="fu">FM_add_ui_tooltip</span>(state, uiele, </span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>      <span class="at">tooltip  =</span> <span class="st">&quot;This is a tooltip&quot;</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>      <span class="at">position =</span> <span class="st">&quot;left&quot;</span>)</span></code></pre></div>
 </div>
 <div id="pausing-the-screen" class="section level2">
 <h2>Pausing the screen</h2>
@@ -2245,8 +2245,8 @@ used. This is controlled with two functions:
 <code>FM_pause_screen()</code> is used to pause the screen and/or update
 the pause message, and <code>FM_resume_screen()</code> is used end the
 pause and resume interaction with the user.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">FM_pause_screen</span>(state, session)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">FM_resume_screen</span>(state, session)</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">FM_pause_screen</span>(state, session)</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="fu">FM_resume_screen</span>(state, session)</span></code></pre></div>
 </div>
 </div>
 <div id="formods-state-objects" class="section level1">
@@ -2386,20 +2386,29 @@ FM:
     #
     #  ===HEADERRIGHT===
     # The placeholder below is HEADERRIGHT, the location is header and by
-    # default we will replace it with nothing.
+    # default we will replace it with nothing. Placeholder text can have no
+    # spaces. 
     #
-    # These defaults can be overwritten in the save section.
+    # These defaults can be overwritten in the save section. If your template
+    # has no placeholders you can comment out the entire phs section.
     #
     phs:
-      - name:      &quot;HEADERRIGHT&quot;
-        location:  &quot;header&quot;
-        value:     &quot;&quot;
       - name:      &quot;HEADERLEFT&quot;
         location:  &quot;header&quot;
         value:     &quot;&quot;
+        tooltip:   &quot;left header text&quot;
+      - name:      &quot;HEADERRIGHT&quot;
+        location:  &quot;header&quot;
+        value:     &quot;&quot;
+        tooltip:   &quot;right header text&quot;
       - name:      &quot;FOOTERLEFT&quot;
         location:  &quot;footer&quot;
         value:     &quot;&quot;
+        tooltip:   &quot;left footer text&quot;
+    phs_formatting: 
+      width:       &quot;100%&quot;
+      tt_position: &quot;left&quot;
+      tt_size:     &quot;medium&quot;
   ui:
     # See ?actionBttn for styles
     button_style: &quot;fill&quot;

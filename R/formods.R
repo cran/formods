@@ -27,6 +27,9 @@
     for(pkg in fcres[["missing_pkgs"]]){
       packageStartupMessage(paste0(" - ",pkg))
     }
+    packageStartupMessage("")
+    packageStartupMessage("Install with the following:")
+    packageStartupMessage(paste0('install.packages(c("', paste0(fcres[["missing_pkgs"]], collapse='", "'), '"))'))
   }
 }
 
@@ -279,8 +282,8 @@ res}
 
 
 #'@export
-#'@title Detect if a UI element has changed
-#'@description Takes a UI element value and an older value and determines if
+#'@title Depreciated: Detect if a UI element has changed
+#'@description Depreciated please use has_updated instead: Takes a UI element value and an older value and determines if
 #'it has been modified
 #'@param ui_val     Current value from the UI.
 #'@param old_val    Last value of of the element.
@@ -330,6 +333,9 @@ res}
 #'@param ui_val     Current value from the UI.
 #'@param old_val    Last value of of the element.
 #'defined.
+#'@param init_val List of values to skip. These are values expected to be
+#'assigned on initialization. For buttons it may be 0. For others it may be
+#'"".
 #'@return Boolean result of the comparison
 #'@examples
 #' changed_true  = has_updated(ui_val = "a", old_val = "")
@@ -337,7 +343,8 @@ res}
 #' changed_false = has_updated(ui_val = "a", old_val = "a")
 #' changed_false
 has_updated = function(ui_val     = NULL,
-                       old_val    = NULL){
+                       old_val    = NULL,
+                       init_val   = NULL){
   res = FALSE
 
   # Detecting length differences
@@ -350,18 +357,29 @@ has_updated = function(ui_val     = NULL,
      res = TRUE
     }
   } else {
-    # here we're comparing scalers
-    if((length(ui_val)  == 1) &
-       (length(old_val) == 1)){
-      if(ui_val != old_val){
-        res = TRUE
-        #message(paste0("old_val: ", old_val))
-        #message(paste0("ui_val: ",  ui_val))
+
+    # Here were checking the value against the init values
+    init_pass = TRUE
+    if(!is.null(init_val)){
+      if(ui_val %in% init_val){
+        init_pass = FALSE
       }
-    } else {
-      message("Unknown scenario has_updated:")
-      message(paste0("old_val: ", old_val))
-      message(paste0("ui_val: ",  ui_val ))
+    }
+    # Here we continue checking if we pass the init
+    if(init_pass){
+      # here we're comparing scalers
+      if((length(ui_val)  == 1) &
+         (length(old_val) == 1)){
+        if(ui_val != old_val){
+          res = TRUE
+          #message(paste0("old_val: ", old_val))
+          #message(paste0("ui_val: ",  ui_val))
+        }
+      } else {
+        message("Unknown scenario has_updated:")
+        message(paste0("old_val: ", old_val))
+        message(paste0("ui_val: ",  ui_val ))
+      }
     }
   }
 res}
@@ -1017,7 +1035,6 @@ FM_set_app_state <- function(session, app_state, set_holds = TRUE){
     FM_message(line="FM_set_app_state()")
     FM_message(line="Unable to find ASM state.")
   }
-
 
   # Replacing the app state in session:
   session$userData[["FM"]] = app_state
@@ -1741,35 +1758,40 @@ FM_generate_report = function(state,
           }
 
 
-          for(phidx in 1:length(state[["yaml"]][["FM"]][["reporting"]][["phs"]])){
-            cph = state[["yaml"]][["FM"]][["reporting"]][["phs"]][[phidx]]
-            tmp_name     = cph[["name"]]
-            tmp_location = cph[["location"]]
-            tmp_value    = cph[["value"]]
+          # Here we do any placeholder substitution if necessary
+          if(!is.null(state[["yaml"]][["FM"]][["reporting"]][["phs"]])){
+            for(phidx in 1:length(state[["yaml"]][["FM"]][["reporting"]][["phs"]])){
+              cph = state[["yaml"]][["FM"]][["reporting"]][["phs"]][[phidx]]
+              tmp_name     = cph[["name"]]
+              tmp_location = cph[["location"]]
+              tmp_value    = cph[["value"]]
 
-            # This will overwrite the defaults with any user specified values:
-            if(tmp_name %in% names(ph)){
-              tmp_value = ph[[tmp_name]]
+              # This will overwrite the defaults with any user specified values:
+              if(length(ph) > 0){
+                if(tmp_name %in% names(ph)){
+                  tmp_value = ph[[tmp_name]]
+                }
+              }
+
+              # Code to
+              code_chunk = c(
+                paste0('rpt  = onbrand::report_add_doc_content(rpt,                '),
+                paste0('  type     = "ph",                                         '),
+                paste0('  content  = list(name     = ',deparse(tmp_name),     ',   '),
+                paste0('                  location = ',deparse(tmp_location), ',   '),
+                paste0('                  value    = ',deparse(tmp_value),    '))  '),
+                ""
+              )
+
+              # Evaluating th eplaceholders if we're actually generating the
+              # report
+              if(!gen_code_only){
+                eval(parse(text=paste0(code_chunk,collapse="\n")))
+              }
+
+              # Appending it to the code
+              code = c(code, code_chunk)
             }
-
-            # Code to
-            code_chunk = c(
-              paste0('rpt  = onbrand::report_add_doc_content(rpt,                '),
-              paste0('  type     = "ph",                                         '),
-              paste0('  content  = list(name     = ',deparse(tmp_name),     ',   '),
-              paste0('                  location = ',deparse(tmp_location), ',   '),
-              paste0('                  value    = ',deparse(tmp_value),    '))  '),
-              ""
-            )
-
-            # Evaluating th eplaceholders if we're actually generating the
-            # report
-            if(!gen_code_only){
-              eval(parse(text=paste0(code_chunk,collapse="\n")))
-            }
-
-            # Appending it to the code
-            code = c(code, code_chunk)
           }
         }
 
@@ -2553,13 +2575,19 @@ nmr}
 #'   \item{catalog:} Dataframe containing the a tabular catalog of the
 #'   models found.
 #'   \itemize{
-#'     \item{label:}  Text label for the model.
-#'     \item{object :}  Name of the object that contains the compiled rxode2 model.
-#'     \item{MOD_TYPE:}  Type of `formods` module the model came from.
-#'     \item{id:} Source `formods` Module ID.
-#'     \item{checksum:} Checksum of the module where the model came from.
-#'     \item{MDLchecksum:} Checksum of the model.
-#'     \item{code:}  Code to generate the model.
+#'     \item{label:}         Text label for the model (e.g. one-compartment model).
+#'     \item{MOD_TYPE:}      Type of module.
+#'     \item{id:}            Module ID.
+#'     \item{rx_obj:}        The rxode2 object.
+#'     \item{rx_obj_name:}   The rxode2 object name that holds the model.
+#'     \item{ts_obj:}        List of timescale information for the system and
+#'                           details of other timescales (\code{list(system="weeks", details = list(days=list(verb="days", conv=86400)))})
+#'     \item{ts_obj_name:}   The object name that holds the timescale for this  model.
+#'     \item{fcn_def:}    Text to define the model.
+#'     \item{MDLMETA:}    Notes about the model.
+#'     \item{code:}       Code to generate the model.
+#'     \item{checksum:}   Module checksum.
+#'     \item{MDLchecksum:} Model checksum.
 #'   }
 #' }
 #'@examples
@@ -2574,12 +2602,12 @@ nmr}
 FM_fetch_mdl = function(state, session, ids=NULL){
 
 
-  hasmdl  = FALSE
-  isgood  = TRUE
-  modules = list()
-  catalog = NULL
-  msgs    = c()
-  mdl     = list()
+  hasmdl     = FALSE
+  isgood     = TRUE
+  modules    = list()
+  catalog    = NULL
+  msgs       = c()
+  mdl        = list()
 
 
   # If we're null then we walk through the session variable and pull out all
@@ -2612,7 +2640,7 @@ FM_fetch_mdl = function(state, session, ids=NULL){
       if(fetch_res[["hasmdl"]]){
         # We've found at least one model
         hasmdl = TRUE
-        mdl = c(mdl, fetch_res[["mdl"]])
+        mdl        = c(mdl, fetch_res[["mdl"]])
       }
     }
   }
@@ -2639,11 +2667,11 @@ FM_fetch_mdl = function(state, session, ids=NULL){
   }
 
   # Packing everything up to be returned to the user
-  res = list(isgood  = isgood,
-             hasmdl  = hasmdl,
-             catalog = catalog,
-             modules = modules,
-             mdl     = mdl)
+  res = list(isgood     = isgood,
+             hasmdl     = hasmdl,
+             catalog    = catalog,
+             modules    = modules,
+             mdl        = mdl)
 
 
   res}

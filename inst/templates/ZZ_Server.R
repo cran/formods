@@ -573,8 +573,9 @@
       if(ui_name %in% names(state[["===ZZ==="]][["button_counters"]])){
         # Button changes are compared to the button click tracking values
         change_detected =
-          has_changed(ui_val  = state[["===ZZ==="]][["ui"]][[ui_name]],
-                      old_val = state[["===ZZ==="]][["button_counters"]][[ui_name]])
+          has_updated(ui_val   = state[["===ZZ==="]][["ui"]][[ui_name]],
+                      old_val  = state[["===ZZ==="]][["button_counters"]][[ui_name]],
+                      init_val = c("", "0"))
 
         if(change_detected){
           formods::FM_le(state, paste0("button click: ", ui_name, " = ", state[["===ZZ==="]][["ui"]][[ui_name]]))
@@ -588,9 +589,9 @@
         }
       }else{
         change_detected =
-          has_changed(ui_val  = state[["===ZZ==="]][["ui"]][[ui_name]],
-                      old_val = state[["===ZZ==="]][["ui_old"]][[ui_name]])
-
+          has_updated(ui_val   = state[["===ZZ==="]][["ui"]][[ui_name]],
+                      old_val  = state[["===ZZ==="]][["ui_old"]][[ui_name]],
+                      init_val = c(""))
         if(change_detected){
           formods::FM_le(state, paste0("setting ===ELEMENT===: ", ui_name, " = ", paste(state[["===ZZ==="]][["ui"]][[ui_name]], collapse=", ")))
 
@@ -918,10 +919,14 @@ res}
 #'  \item{mdl:}       List with models. Each list element has the name of
 #'  the R-object for that dataset. Each element has the following structure:
 #'  \itemize{
-#'    \item{label:}      Text label for the model (e.g. one-compartment model).
-#'    \item{MOD_TYPE:}   Type of module.
-#'    \item{id:}         Module ID.
-#'    \item{rx_obj:}     The rxode2 object name that holds the model.
+#'    \item{label:}         Text label for the model (e.g. one-compartment model).
+#'    \item{MOD_TYPE:}      Type of module.
+#'    \item{id:}            Module ID.
+#'    \item{rx_obj:}        The rxode2 object.
+#'    \item{rx_obj_name:}   The rxode2 object name that holds the model.
+#'    \item{ts_obj:}        List of timescale information for the system and
+#'                          details of other timescales (\code{list(system="weeks", details = list(days=list(verb="days", conv=86400)))})
+#'    \item{ts_obj_name:}   The object name that holds the timescale for this  model.
 #'    \item{fcn_def:}    Text to define the model.
 #'    \item{MDLMETA:}    Notes about the model.
 #'    \item{code:}       Code to generate the model.
@@ -939,11 +944,10 @@ res}
 #' names(mdls)
 ===ZZ===_fetch_mdl = function(state){
 
-  # JMH update later
-  hasmdl  = FALSE
-  isgood = TRUE
-  msgs   = c()
-  mdl    = list()
+  hasmdl     = FALSE
+  isgood     = TRUE
+  msgs       = c()
+  mdl        = list()
 
   # This prevents returning a dataset if this is triggered before data has
   # been loaded
@@ -967,6 +971,9 @@ res}
                MOD_TYPE    = "===ZZ===",
                id          = state[["id"]],
                rx_obj      = NULL, #
+               rx_obj_name = NULL, #
+               ts_obj      = NULL, #
+               ts_obj_name = NULL, #
                fcn_def     = NULL, #
                MDLMETA     = NULL, #
                code        = NULL, #
@@ -980,10 +987,10 @@ res}
     msgs = c(msgs, "Bad ===ZZ=== state")
   }
 
-  res = list(hasmdl  = hasmdl,
-             isgood = isgood,
-             msgs   = msgs,
-             mdl    = mdl)
+  res = list(hasmdl     = hasmdl,
+             isgood     = isgood,
+             msgs       = msgs,
+             mdl        = mdl)
   res}
 
 
