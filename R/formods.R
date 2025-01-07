@@ -134,6 +134,7 @@ res}
 #'     \item{object:} Name of the R Object containing the data frame
 #'     \item{MOD_TYPE:} Short name of the type of module
 #'     \item{id:} Module ID
+#'     \item{idx:} Numerical identifyer within the module
 #'     \item{checksum:} Module checksum
 #'     \item{DSchecksum:} Checksum of the dataset
 #'     \item{code:} Code to generate the dataset
@@ -147,8 +148,7 @@ res}
 #'@examples
 #' # We need a module state and a Shiny session variable
 #' # to use this function:
-#' id="UD"
-#' sess_res = UD_test_mksession(session=list(), id=id)
+#' sess_res = UD_test_mksession()
 #' session = sess_res$session
 #' state   = sess_res$state
 #' ds = FM_fetch_ds(state, session)
@@ -207,6 +207,7 @@ FM_fetch_ds = function(state, session, ids=NULL){
         object      = dsname,
         MOD_TYPE    = ds[[dsname]][["MOD_TYPE"]],
         id          = ds[[dsname]][["id"]],
+        idx         = ds[[dsname]][["idx"]],
         checksum    = ds[[dsname]][["checksum"]],
         DSchecksum  = ds[[dsname]][["DSchecksum"]],
         code        = ds[[dsname]][["code"]])
@@ -239,8 +240,20 @@ res}
 autocast = function(ui_input, quote_char=TRUE){
 
 
-  ui_input_num = as.numeric(as.character(ui_input))
+  ui_input_num = suppressWarnings(as.numeric(as.character(ui_input)))
                                 # NULL returns numeric length zero
+
+ # Taken from here:
+ # https://stackoverflow.com/a/36239701
+ # as.num = function(x, na.strings = "NA") {
+ #    stopifnot(is.character(x))
+ #    na = x %in% na.strings
+ #    x[na] = "0"
+ #    x = as.numeric(x)
+ #    x[na] = NA_real_
+ #    x
+ #}
+
   if(any(is.na(ui_input_num)) | (length(ui_input_num) == 0)){
     res = as.character(ui_input)
     if(quote_char){
@@ -499,7 +512,7 @@ hold_status}
 #' }
 #'@examples
 #' # We need a Shiny session object to use this function:
-#' sess_res = DW_test_mksession(session=list())
+#' sess_res = DW_test_mksession()
 #' session = sess_res$session
 #' state   = sess_res$state
 #' app_code = FM_fetch_app_code(session = session,
@@ -611,18 +624,9 @@ res}
 #'@examples
 #' # Within shiny a session variable will exist,
 #' # this creates one here for testing purposes:
-#' sess_res = UD_test_mksession(session=list())
+#' sess_res = UD_test_mksession()
 #' session = sess_res$session
-#'# This function assumes that some module state exists:
-#'state = UD_init_state(
-#'  FM_yaml_file  = system.file(package = "formods",
-#'                              "templates",
-#'                              "formods.yaml"),
-#'  MOD_yaml_file = system.file(package = "formods",
-#'                              "templates",
-#'                              "UD.yaml"),
-#'  id = "UD",
-#'  session = session)
+#' state   = sess_res$state
 #' FM_fetch_log_path(state)
 FM_fetch_log_path = function(state){
 
@@ -638,8 +642,7 @@ res}
 #'@return Character string with the path to the log file.
 #'@examples
 #' # We need a state object to use this function:
-#' id="UD"
-#' sess_res = UD_test_mksession(session=list(), id=id)
+#' sess_res = UD_test_mksession()
 #' state = sess_res$state
 #' user_dir = FM_fetch_user_files_path(state)
 #' user_dir
@@ -675,8 +678,7 @@ user_dir}
 #'@return Boolean value indicating success (\code{TRUE}) or failure (\code{FALSE}).
 #'@examples
 #' # We need a module state to use this function:
-#' id="UD"
-#' sess_res = UD_test_mksession(session=list(), id=id)
+#' sess_res = UD_test_mksession()
 #' state   = sess_res$state
 #' FM_le(state, "This is a normal  message")
 #' FM_le(state, "This is a danger  message", entry_type="danger")
@@ -909,10 +911,9 @@ p_res}
 #'@return module state or NULL if it's not defined.
 #'@examples
 #' # We need a Shiny session variable to use this function:
-#' id="UD"
-#' sess_res = UD_test_mksession(session=list(), id=id)
+#' sess_res = UD_test_mksession()
 #' session = sess_res$session
-#' state = FM_fetch_mod_state(session, id)
+#' state = FM_fetch_mod_state(session, "UD")
 FM_fetch_mod_state <- function(session,id){
 
   FM_ID = paste0("FM_", id)
@@ -931,11 +932,10 @@ state}
 #'@examples
 #' # We need a Shiny session variable and a module state
 #' # object to use this function:
-#' id="UD"
-#' sess_res = UD_test_mksession(session=list(), id=id)
+#' sess_res = UD_test_mksession()
 #' session = sess_res$session
 #' state   = sess_res$state
-#' FM_set_mod_state(session, id, state)
+#' FM_set_mod_state(session, "UD", state)
 FM_set_mod_state <- function(session,id,state){
 
   FM_ID = paste0("FM_", id)
@@ -954,8 +954,7 @@ session}
 #'@return No return value, just updates the app state in the session variable.
 #'@examples
 #' # We need a Shiny session object to use this function:
-#' id="UD"
-#' sess_res = UD_test_mksession(session=list(), id=id)
+#' sess_res = UD_test_mksession()
 #' session = sess_res$session
 #' app_state = FM_fetch_app_state(session)
 #' FM_set_app_state(session, app_state)
@@ -1054,14 +1053,14 @@ NULL}
 #'   \item{uiele_packages:} UI element for installed packages to be used in shiny apps.
 #'   \item{uiele_options:}  UI element for current options.
 #'   \item{uiele_modules: } UI element for loaded formods modules to be used in shiny apps.
+#'   \item{modules: }  List with formods module IDs used in the app as the element names. Each contains details about that module.
 #'   \item{msgs:}  System information as text to be used in a report/terminal.
 #'   \item{si_packages} Dataframe with currently used packages.
 #'   \item{si_options} Dataframe with current options
 #' }
 #'@examples
 #' # We need a Shiny session object to use this function:
-#' id="UD"
-#' sess_res = UD_test_mksession(session=list(), id=id)
+#' sess_res = UD_test_mksession()
 #' session = sess_res$session
 #' app_info  = FM_fetch_app_info(session)
 #' app_info$msgs
@@ -1070,6 +1069,7 @@ FM_fetch_app_info <- function(session){
   uiele           = NULL
   uiele_packages  = NULL
   uiele_modules   = NULL
+  modules         = list()
   si_packages     = NULL
 
   # The devtools package is needed for some information we want to find out if
@@ -1137,6 +1137,13 @@ FM_fetch_app_info <- function(session){
         uiele_modules   = tagList(uiele_modules,tags$ul(tags$li(tmp_msg)))
         msgs    = c(msgs, tmp_msg)
       }
+
+      modules[[ state[["id"]] ]] = list(
+        MOD_TYPE      = state[["MOD_TYPE"]],
+        deps          = deps,
+        FM_yaml_file  = state[["FM_yaml_file"]],
+        MOD_yaml_file = state[["MOD_yaml_file"]]
+      )
     }
   }
 
@@ -1191,6 +1198,7 @@ FM_fetch_app_info <- function(session){
   res = list(uiele          = uiele,
              uiele_packages = uiele_packages,
              uiele_modules  = uiele_modules ,
+             modules        = modules,
              uiele_options  = uiele_options ,
              msgs           = msgs,
              si_options     = si_options,
@@ -1205,8 +1213,7 @@ res}
 #'@return App state or NULL if it's not defined.
 #'@examples
 #' # We need a Shiny session object to use this function:
-#' id="UD"
-#' sess_res = UD_test_mksession(session=list(), id=id)
+#' sess_res = UD_test_mksession()
 #' session = sess_res$session
 #' app_state = FM_fetch_app_state(session)
 #' app_state
@@ -1234,7 +1241,7 @@ app_state}
 #'@examples
 #' # Within shiny a session variable will exist,
 #' # this creates examples here for testing purposes:
-#' sess_res = UD_test_mksession(session=list())
+#' sess_res = UD_test_mksession()
 #' session = sess_res$session
 #'state = FM_init_state(
 #'    FM_yaml_file  = system.file(package = "formods",
@@ -1335,8 +1342,7 @@ state}
 #'@return No return value, sets message in supplied session variable.
 #'@examples
 #' # We need a module state object to use this function:
-#' id="UD"
-#' sess_res = UD_test_mksession(session=list(), id=id)
+#' sess_res = UD_test_mksession()
 #' state = sess_res$state
 #' session = sess_res$session
 #' FM_proc_include(state, session)
@@ -1442,8 +1448,7 @@ FM_proc_include = function(state, session){
 #'@return state with ui message set.
 #'@examples
 #' # We need a module state object to use this function:
-#' id="UD"
-#' sess_res = UD_test_mksession(session=list(), id=id)
+#' sess_res = UD_test_mksession()
 #' state = sess_res$state
 #' state = FM_set_ui_msg(state, "Something happend.")
 FM_set_ui_msg = function(state, msgs, append=FALSE){
@@ -1989,14 +1994,14 @@ state}
 #'@return Pauses the screen and has no return value.
 #'@examples
 #' # We need a module state object and Shiny session objects to use this function:
-#' sess_res = UD_test_mksession(session=list())
+#' sess_res = UD_test_mksession()
 #' session = sess_res$session
 #' state = sess_res$state
-#' FM_pause_screen(state, session)
+#' FM_pause_screen(state, session, "pausing")
 #' FM_resume_screen(state, session)
 FM_pause_screen = function(state, session, message){
 
-  if((any(c("ShinySession", "session_proxy") %in% class(session)))){
+  if(formods::is_shiny(session)){
     if(system.file(package = "shinybusy") !=""){
      shinybusy::show_modal_spinner(text=message, session=session)
     }
@@ -2019,7 +2024,7 @@ NULL}
 #' }
 #'@examples
 #' # We need a module state object to use this function:
-#' sess_res = UD_test_mksession(session=list())
+#' sess_res = UD_test_mksession()
 #' state = sess_res$state
 #'
 #' data_file_local =  system.file(package="formods", "test_data", "TEST_DATA.xlsx")
@@ -2099,14 +2104,14 @@ res}
 #'@return No return value, called to disable screen pause.
 #'@examples
 #' # We need a module state object and Shiny session objects to use this function:
-#' sess_res = UD_test_mksession(session=list())
+#' sess_res = UD_test_mksession()
 #' session = sess_res$session
 #' state = sess_res$state
-#' FM_pause_screen(state, session)
+#' FM_pause_screen(state, session, "pausing")
 #' FM_resume_screen(state, session)
 FM_resume_screen=function(state, session){
 
-  if((any(c("ShinySession", "session_proxy") %in% class(session)))){
+  if(formods::is_shiny(session)){
     if(system.file(package = "shinybusy") !=""){
       shinybusy::remove_modal_spinner(session = session)
     }
@@ -2128,8 +2133,7 @@ NULL}
 #'@examples
 #'if(interactive()){
 #' # We need a module state object to use this function:
-#' id="UD"
-#' sess_res = UD_test_mksession(session=list(), id=id)
+#' sess_res = UD_test_mksession()
 #' state = sess_res$state
 #' uiele = shiny::textInput(inputId = "my input", label="example input")
 #'
@@ -2166,8 +2170,7 @@ uiele}
 #' }
 #'@examples
 #' # We need a Shiny session object to use this function:
-#' id="UD"
-#' sess_res = UD_test_mksession(session=list(), id=id)
+#' sess_res = UD_test_mksession()
 #' session  = sess_res$session
 #' state    = sess_res$state
 #' mod_deps = FM_fetch_deps(state, session)
@@ -2403,6 +2406,22 @@ is_installed = function(pkgname){
 res}
 
 #'@export
+#'@title Determine if Object is Shiny Session Object
+#'@description Determines if the specified object is a shiny session object.
+#'@param session Session object
+#'@return Logical indicating if the object is a shiny session object or not
+#'@examples
+#' is_shiny(session = list())
+is_shiny     = function(session=list()){
+
+  res = FALSE
+  if(any(c("ShinySession", "MockShinySession", "session_proxy") %in% class(session))){
+    res = TRUE
+  }
+
+res}
+
+#'@export
 #'@title Makes Template Files for formods New Module
 #'@description If you want to create a new formods module this function will
 #'create the template files for you.
@@ -2436,14 +2455,16 @@ new_module_template = function(
 
   # Source and destination files:
   mod_files = list(
-    mc     = list(source = system.file(package="formods", "templates", "ZZ_module_components.R"),
-                  dest   = paste0(SN, "_module_components.R")),
-    server = list(source = system.file(package="formods", "templates", "ZZ_Server.R"),
-                  dest   = paste0(SN, "_Server.R")),
-    yaml   = list(source = system.file(package="formods", "templates", "ZZ.yaml"),
-                  dest   = paste0(SN, ".yaml")),
-    funcs  = list(source = system.file(package="formods", "templates", "ZZ_funcs.R"),
-                  dest   = paste0(SN, "_funcs.R"))
+    mc      = list(source = system.file(package="formods", "templates", "ZZ_module_components.R"),
+                   dest   = paste0(SN, "_module_components.R")),
+    server  = list(source = system.file(package="formods", "templates", "ZZ_Server.R"),
+                   dest   = paste0(SN, "_Server.R")),
+    yaml    = list(source = system.file(package="formods", "templates", "ZZ.yaml"),
+                   dest   = paste0(SN, ".yaml")),
+    preload = list(source = system.file(package="formods", "preload", "ZZ_preload.yaml"),
+                   dest   = paste0(SN, "_preload.yaml")),
+    funcs   = list(source = system.file(package="formods", "templates", "ZZ_funcs.R"),
+                   dest   = paste0(SN, "_funcs.R"))
   )
 
   # Placeholder substitutions
@@ -2527,6 +2548,11 @@ use_formods = function(
     dir.create(template_dir, recursive=TRUE)
   }
 
+  preload_dir  = file.path(repo_root, "inst", "preload")
+  if(!dir.exists(preload_dir)){
+    dir.create(preload_dir, recursive=TRUE)
+  }
+
   test_apps_dir = file.path(repo_root, "inst", "test_apps")
   if(!dir.exists(test_apps_dir)){
     dir.create(test_apps_dir, recursive=TRUE)
@@ -2540,21 +2566,24 @@ use_formods = function(
           element  = element,
           file_dir = tempdir())
 
-  tmp_server = file.path(repo_root, "R",                 nmr[["server"]][["dest"]])
-  tmp_yaml   = file.path(repo_root, "inst", "templates", nmr[["yaml"]][["dest"]])
-  tmp_mc     = file.path(repo_root, "inst", "templates", nmr[["mc"]][["dest"]])
-  tmp_funcs  = file.path(repo_root, "inst", "test_apps", nmr[["funcs"]][["dest"]])
+  tmp_server   = file.path(repo_root, "R",                 nmr[["server"]][["dest"]])
+  tmp_yaml     = file.path(repo_root, "inst", "templates", nmr[["yaml"]][["dest"]])
+  tmp_mc       = file.path(repo_root, "inst", "templates", nmr[["mc"]][["dest"]])
+  tmp_funcs    = file.path(repo_root, "inst", "test_apps", nmr[["funcs"]][["dest"]])
+  tmp_preload  = file.path(repo_root, "inst", "preload",   nmr[["preload"]][["dest"]])
 
   message("Creating module files:")
   message(paste0(" - ", tmp_server))
   message(paste0(" - ", tmp_yaml))
   message(paste0(" - ", tmp_mc))
   message(paste0(" - ", tmp_funcs))
+  message(paste0(" - ", tmp_preload))
 
   file.copy(from = nmr[["server"]][["dest_full"]],  to = tmp_server,  overwrite =  overwrite)
   file.copy(from = nmr[["yaml"]][["dest_full"]],    to = tmp_yaml,    overwrite =  overwrite)
   file.copy(from = nmr[["mc"]][["dest_full"]],      to = tmp_mc,      overwrite =  overwrite)
   file.copy(from = nmr[["funcs"]][["dest_full"]],   to = tmp_funcs,   overwrite =  overwrite)
+  file.copy(from = nmr[["preload"]][["dest_full"]], to = tmp_preload, overwrite =  overwrite)
 nmr}
 
 #'@export
@@ -2593,8 +2622,7 @@ nmr}
 #'@examples
 #' # We need a module state and a Shiny session variable
 #' # to use this function:
-#' id="UD"
-#' sess_res = UD_test_mksession(session=list(), id=id)
+#' sess_res = UD_test_mksession()
 #' session = sess_res$session
 #' state   = sess_res$state
 #' mdl = FM_fetch_mdl(state, session)
@@ -2655,6 +2683,7 @@ FM_fetch_mdl = function(state, session, ids=NULL){
           object      = mdlname,
           MOD_TYPE    = mdl[[mdlname]][["MOD_TYPE"]],
           id          = mdl[[mdlname]][["id"]],
+          idx         = mdl[[mdlname]][["idx"]],
           checksum    = mdl[[mdlname]][["checksum"]],
           MDLchecksum = mdl[[mdlname]][["MDLchecksum"]],
           code        = mdl[[mdlname]][["code"]])
@@ -2708,5 +2737,309 @@ linspace = function(a, b, n=100){
 
    step = (b-a)/(n-1)
    return(seq(a,b,step))
+
+}
+
+#'@export
+#'@title Evaluate R Code in String
+#'@description Attempts to evaluate a string as a chunk of R code. If that
+#'succeeds it will return the result. If not it will return the original text.
+#'@param estr String to render.
+#'@return String containing the evaled as a character or the original string
+#'@examples
+#' res = render_str(estr="ls()")
+render_str <- function(estr=""){
+
+  cmd = paste0("res = ", estr)
+
+  tc_res = FM_tc(cmd=cmd, tc_env = list(), capture="res")
+
+  if(tc_res[["isgood"]]){
+    res = tc_res[["capture"]][["res"]]
+  } else {
+    res = estr
+
+  }
+
+  return(res)}
+
+#'@export
+#'@title Preload Data Into App
+#'@description Populates session data for testing or to load a specific
+#'analysis.
+#'@param session     Shiny session variable (in app) or a list (outside of app)
+#'@param sources     Vector of at corresponds with the ID used to call the modules UI elements
+#'@param react_state Reactive shiny object (in app) or a list (outside of app) used to trigger reactions
+#'@param quickload   Logical \code{TRUE} to load reduced analysis \code{FALSE} to load the full analysis
+#'@return list with the following elements
+#' \itemize{
+#'   \item{isgood:}       Boolean indicating the exit status of the function.
+#'   \item{msgs:}         Messages to be passed back to the user.
+#'   \item{all_sess_res:} List containing the result for each module stored in
+#'   the list name with the module ID.
+#'   \item{session:} Returning the session variable to be used in scripting (not in app).
+#'}
+#'@examples
+#' sources=system.file(package="formods", "preload", "UD.yaml")
+#'res = FM_app_preload(session=list(), sources=sources)
+FM_app_preload = function(session, sources=NULL, react_state = list(), quickload=FALSE){
+  isgood       = TRUE
+  msgs         = c()
+  err_msgs     = c()
+  all_sess_res = list()
+
+  # This is created in an eval below so we define
+  # it here to prevent errors in check
+  sess_res = NULL
+
+  # Loading the app state
+  ras_res = ASM_read_app_state(sources = sources)
+  src_list = ras_res[["src_list"]]
+  yaml_res = ras_res[["yaml_res"]]
+
+  if(!ras_res[["isgood"]]){
+    isgood = FALSE
+    msgs = c(msgs, ras_res[["msgs"]])
+  }
+
+  # Making sure they are ordered based on dependencies
+  deps_found = c()
+  IDs_proc   = c()
+  IDs_found  = names(yaml_res)
+
+  idx = 1
+
+  while(idx <= length(IDs_found)){
+    for(mod_ID in IDs_found){
+      # we only consider the ID if it hasn't
+      # been processed yet:
+      if(!(mod_ID %in% IDs_proc)){
+        yaml_res[[mod_ID]][["mod_cfg"]][["module"]]
+        # Current module dependencies
+        tmp_depends = yaml_res[[mod_ID]][["mod_cfg"]][["MC"]][["module"]][["depends"]]
+        # If there are no dependencies then we add the ID
+        if(is.null(tmp_depends)){
+          IDs_proc = c(IDs_proc, mod_ID)
+        } else {
+          if(all(unlist(tmp_depends) %in% IDs_proc)){
+            IDs_proc = c(IDs_proc, mod_ID)
+          }
+        }
+      }
+    }
+
+    # This will break out of the loop if we've found the
+    # order for all of the modules
+    if(all(IDs_found %in% IDs_proc)){
+      idx = length(IDs_found) + 1
+    }
+    idx = idx+1
+  }
+
+  if(!all(IDs_found %in% IDs_proc)){
+    isgood = FALSE
+    msgs = c(msgs, "Unable to sort out dependencies for the following modules:",
+             paste0("  - ", paste0(IDs_found[!(IDs_found %in% IDs_proc)], collapse=", ")))
+  }
+
+  if(isgood){
+
+    # Looping through each ID and loading
+    for(mod_ID in IDs_proc){
+
+      MOD_FUNC = paste0(yaml_res[[mod_ID]][["mod_cfg"]][["MC"]][["module"]][["type"]], "_preload")
+      if(exists(MOD_FUNC, mode="function")){
+
+        FUNC_CALL = paste0("sess_res   = ", MOD_FUNC,"(session=session, src_list=src_list, yaml_res=yaml_res, mod_ID = mod_ID, react_state=react_state, quickload=quickload)")
+        eval(parse(text=FUNC_CALL))
+
+
+        # Capturing any loading errors that may have occurred:
+        if(!sess_res[["isgood"]]){
+          isgood = FALSE
+          msgs = c(msgs, sess_res[["msgs"]])
+          FM_message(line=paste0("Failure to preload module ID: ", mod_ID), entry_type="danger")
+          for(tmp_line in sess_res[["msgs"]]){
+            FM_message(line=tmp_line, entry_type="danger")
+          }
+        }
+
+        # Storing the results of the individual session loaded
+        all_sess_res[[mod_ID]] = sess_res
+
+        # If we're running at the scripting level we need to pull
+        # the session information and react_state out of result
+        if(!formods::is_shiny(session)){
+          session     = sess_res[["session"]]
+          react_state = sess_res[["react_state"]]
+        }
+      } else {
+        isgood = FALSE
+        err_msgs = c(err_msgs,
+                     paste0("Unable to find formods module preload function:"),
+                     paste0("  -> function:  ", MOD_FUNC, "()"),
+                     paste0("  -> module ID: ", mod_ID))
+
+      }
+    }
+  }
+
+  if(!isgood){
+    for(tmp_line in err_msgs){
+      FM_message(line=tmp_line, entry_type="danger")
+    }
+    msgs = c(msgs,err_msgs)
+  }
+
+
+  res=list(isgood       =isgood,
+           msgs         = msgs,
+           all_sess_res = all_sess_res,
+           session      = session)
+
+res}
+
+#'@export
+#'@title Preload Data Into App
+#'@description Populates session data for testing or to load a specific
+#'analysis.
+#'@param session     Shiny session variable (in app) or a list (outside of app)
+#'@return list with the following elements
+#' \itemize{
+#'   \item{isgood:}       Boolean indicating the exit status of the function.
+#'   \item{msgs:}         Messages to be passed back to the user.
+#'   \item{yaml_list:}    Lists with preload components.
+#'   \item{session:} Returning the session variable to be used in scripting (not in app).
+#'}
+#'@examples
+#' sources=system.file(package="formods", "preload", "UD.yaml")
+#'sess_res = FM_app_preload(session=list(), sources=sources)
+#'mkp_res = FM_mk_app_preload(sess_res$session)
+FM_mk_app_preload = function(session){
+  isgood       = TRUE
+  msgs         = c()
+  ids          = c()
+  mk_res       = NULL
+
+  yaml_list    = list()
+
+  app_state = FM_fetch_app_state(session)
+
+  # Getting all the module IDs in the app:
+  for(mod_state in names(app_state)){
+    ids = c(ids, app_state[[mod_state]]$id)
+  }
+
+  # Walking through each module id and attempting to extract models
+  for(mod_ID in ids){
+    tmp_state    = FM_fetch_mod_state(session, mod_ID)
+    tmp_MOD_TYPE = tmp_state[["MOD_TYPE"]]
+    MOD_FUNC     = paste0(tmp_MOD_TYPE, "_mk_preload")
+
+    # If that module has a mk_preload function then we try build it:
+    if(exists(MOD_FUNC, mode="function")){
+      FM_message(line=paste0("Saving module: ", mod_ID))
+      FUNC_CALL = paste0("mk_res = ", MOD_FUNC,"(state = tmp_state)")
+      eval(parse(text=FUNC_CALL))
+      if(mk_res[["isgood"]]){
+        # Saving module yaml component
+        yaml_list = c(yaml_list, mk_res[["yaml_list"]])
+
+      } else {
+        # Capturing any genration errors that may have occurred:
+        isgood = FALSE
+        msgs = c(msgs, mk_res[["msgs"]])
+        FM_message(line=paste0("Failure to make preload for module ID: ", mod_ID), entry_type="danger")
+        for(tmp_line in c(FUNC_CALL, mk_res[["msgs"]])){
+          FM_message(line=tmp_line, entry_type="danger")
+        }
+      }
+    } else {
+      tmp_msg = paste0("No mk preload function found: ", MOD_FUNC, "() for ID: ", mod_ID)
+      FM_message(line=tmp_msg, entry_type="warning")
+    }
+
+  }
+
+  #browser()
+
+  res=list(isgood       = isgood,
+           msgs         = msgs,
+           yaml_list    = yaml_list,
+           session      = session)
+res}
+
+#'@export
+#'@title Resets the App State
+#'@description Removes formods data from the app.
+#'@param session Shiny session variable.
+#'@return session variable with app data removed.
+#'@examples
+#' # We need a Shiny session object to use this function:
+#' sess_res = UD_test_mksession()
+#' session = sess_res$session
+#' app_state = FM_reset_app(session)
+#' app_state
+FM_reset_app <- function(session){
+
+  session$userData[["FM"]] = NULL
+
+session}
+
+
+#'@export
+#'@title Run the 'formods' Shiny App
+#'@description Runs the test formods. app.
+#'@param host Hostname of the server ("127.0.0.1")
+#'@param port Port number for the app (3838)
+#'@param server_opts List of options (names) and their vlues (value) e.g.
+#'\code{list(shiny.maxRequestSize = 30 * 1024^2)}.
+#'@param devmode   Boolean value, when TRUE will run formods with development
+#'modules.
+#'@param mksession Boolean value, when TRUE will load test session data
+#'for app testing.
+#'@return Nothing is returned, this function just runs the built-in formods
+#'app.
+#'@examples
+#'if (interactive()) {
+#' run_formods()
+#'}
+run_formods  = function(host        = "127.0.0.1",
+                    port        = 3838,
+                    server_opts = list(shiny.maxRequestSize = 30 * 1024^2),
+                    devmode     = FALSE,
+                    mksession   = FALSE){
+
+  if(exists("server_opts")){
+    for(oname in names(server_opts)){
+      eval(parse(text=paste0('options(',oname,'= server_opts[[oname]])')))
+    }
+  }
+
+  # File used to indicate we're in test mode
+  ftmptest = file.path(tempdir(), "formods.test")
+
+  # Deleteing any existing files
+  if(file.exists(ftmptest)){
+    unlink(ftmptest)
+  }
+
+  # If mksession is true we create the temporary file
+  if(mksession){
+    file.create(ftmptest)
+  }
+
+
+  if(devmode){
+    shiny::runApp(system.file(package="formods", "templates","FM_compact.R"),
+                  host  = host,
+                  port  = port)
+  } else {
+    shiny::runApp(system.file(package="formods", "templates","FM_compact.R"),
+                  host  = host,
+                  port  = port)
+  }
+
+
 
 }

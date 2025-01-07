@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Workflows and Preloading Content</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Workflows and Preloading Content</h1>
+
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>Sometimes it is useful to be able to preload content into the app.
+This can take a few forms. In the most basic you may want to save the
+current analysis and reload it at a later date. Often you may have
+standard analyses that you want to run when a dataset of a particular
+format has been loaded. Lastly, you may want to set the app up so that
+it starts with a bunch of preloaded content so the user can play around
+with it. The following will outline how to do each of these tasks.</p>
+<div id="saving-and-loading-an-analysis" class="section level2">
+<h2>Saving and loading an analysis</h2>
+<p>This is the most straightforward method but it is mentioned here
+because it is the most likley way a user would set up the other two
+scenarios below. You can load a dataset and populate any of the modules
+with content like normal. Then you would go to the save analysis portion
+of the app (under App State) and just select save. This should push a
+zip file to you with the current analysis saved inside of ti. To reload
+this analysis you can load the zip file and it should repopulate the
+analysis for you. <strong>The key here is to refresh the app so it is
+“empty” before loading it.</strong></p>
+<p>If you open that zip file you will notice a file called
+<code>preload.yaml</code> along with your original dataset. This yaml
+file is needed below to create workflows and prelaod the app.</p>
+</div>
+<div id="creating-automated-workflows" class="section level2">
+<h2>Creating automated workflows</h2>
+<p>To create automated workflows you need one or more preload files. You
+will deploy these along with the app. The first thing you will need to
+do is create a copy of the app (or your own app) in the deployment
+directory. You can do this using this command</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">file.copy</span>(<span class="at">from =</span> <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;formods&quot;</span>,<span class="st">&quot;templates&quot;</span>, <span class="st">&quot;FM_compact.R&quot;</span>), </span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>          <span class="at">to   =</span> <span class="st">&quot;App.R&quot;</span>)</span></code></pre></div>
+<p>Certain features of the app behave differently depending on whether
+it is running locally or deployed on a server. If you want to deploy the
+app you need to tell the App it is deployed. This is done by creating an
+empty file named DEPLOYED in the same directory as the deployed app
+file. This is optional.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">file.create</span>(<span class="st">&quot;DEPLOYED&quot;</span>)</span></code></pre></div>
+<p>If you look at the top of the <code>App.R</code> file you created you
+will see something like this:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>formods.yaml  <span class="ot">=</span> <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;formods&quot;</span>,  <span class="st">&quot;templates&quot;</span>,  <span class="st">&quot;formods.yaml&quot;</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>ASM.yaml      <span class="ot">=</span> <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;formods&quot;</span>,  <span class="st">&quot;templates&quot;</span>,  <span class="st">&quot;ASM.yaml&quot;</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>UD.yaml       <span class="ot">=</span> <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;formods&quot;</span>,  <span class="st">&quot;templates&quot;</span>,  <span class="st">&quot;UD.yaml&quot;</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>DW.yaml       <span class="ot">=</span> <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;formods&quot;</span>,  <span class="st">&quot;templates&quot;</span>,  <span class="st">&quot;DW.yaml&quot;</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>FG.yaml       <span class="ot">=</span> <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;formods&quot;</span>,  <span class="st">&quot;templates&quot;</span>,  <span class="st">&quot;FG.yaml&quot;</span>)</span></code></pre></div>
+<p>These are the configuration files for each module. The workflow
+information is stored in the <code>formods.yaml</code> file. You’ll need
+to create a local version you can edit and fill with your workflow
+information.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">file.copy</span>(<span class="at">from =</span> <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;formods&quot;</span>, <span class="st">&quot;templates&quot;</span>,  <span class="st">&quot;formods.yaml&quot;</span>),</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>          <span class="at">to   =</span> <span class="st">&quot;myformods.yaml&quot;</span>)</span></code></pre></div>
+<p>To make your app use this file you need to edit it and change the
+assignment of the <code>formods.yaml</code> object:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>formods.yaml       <span class="ot">=</span> <span class="fu">file.path</span>(<span class="fu">getwd</span>(), <span class="st">&quot;myformods.yaml&quot;</span>)</span></code></pre></div>
+<p>When you alter these configuration file locations it is important to
+give the full path.</p>
+<p>If you edit the file <code>myformods.yaml</code> you will see a
+section called workflows:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="at">  </span><span class="fu">workflows</span><span class="kw">:</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="at">    </span><span class="fu">example</span><span class="kw">:</span><span class="at"> </span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="at">      </span><span class="fu">group</span><span class="kw">:</span><span class="at">      </span><span class="st">&quot;Examples&quot;</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="at">      </span><span class="fu">desc</span><span class="kw">:</span><span class="at">       </span><span class="st">&quot;Example Workflow&quot;</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">      # Set to true if the workflow requires a dataset</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="at">      </span><span class="fu">require_ds</span><span class="kw">:</span><span class="at"> </span><span class="ch">TRUE</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">      # this can contain an aboslute path as a string or R evaluable code</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="at">      </span><span class="fu">preload</span><span class="kw">:</span><span class="at">    </span><span class="st">&quot;file.path(&#39;.&#39;, &#39;example.yaml&#39;)&quot;</span></span></code></pre></div>
+<p>This is be a pre-populated example showing how to creaet a workflow.
+You can create as many workflows as you want here by giving them
+different names from example above (copy/paste example, change the name,
+and alter the details). The group option will allow you to group your
+workflows together in the selection form. The description
+(<code>desc</code>) is a verbose description of the workflow and
+<code>require_ds</code> indicates if the workflow depends on a dataset.
+This should probably be true. The <code>preload</code> field points to
+the yaml file that has the workflow details. This is the
+<code>preload.yaml</code> file you will extract from the zip file
+created when saving an analysis. You need to copy that file to the
+deployment directory and rename it to whatever is referenced here
+(e.g. <code>preload.yaml</code> to <code>example.yaml</code>).</p>
+<p>Now you should have the following files in the directory:</p>
+<ul>
+<li><code>App.R</code>: App file edited to use the custom formods
+configuration file.</li>
+<li><code>DEPLOYED</code>: Empty file indicating the app is
+deployed.</li>
+<li><code>myformods.yaml</code>: Customized formods file to indicate the
+available workflows</li>
+<li><code>example.yaml</code>: Example workflow.</li>
+</ul>
+<p>If you set this up correctly and it finds at least one workflow yaml
+file specified it should create a workflow selection element and button
+to run the selected workflow in the data upload section of the app like
+this:</p>
+<div class="float">
+<img role="img" aria-label="Workflow ui elements" src="data:image/png;base64,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b24+CiAgICAgICAgIDx0aWZmOk9yaWVudGF0aW9uPjE8L3RpZmY6T3JpZW50YXRpb24+CiAgICAgIDwvcmRmOkRlc2NyaXB0aW9uPgogICA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgoHznHRAAA+gElEQVR4Ae2dB5gbxfnG53zngsFUg8E0g+m992Ja6D300EMJBEjogRAg/CEQINRQQwkQeu+9Bwi9914MBkyzMS53vv/+9vzpRnMraaVbyZLv/Z7nble7s1PeWc07X5lRU3skTiIEhIAQEAJCoE4Q6FUn9VA1hIAQEAJCQAjECIiY9CIIASEgBIRAXSEgYqqr7lBlhIAQEAJCQMSkd0AICAEhIATqCgERU111hyojBISAEBACIia9A0JACAgBIVBXCIiY6qo7VBkhIASEgBAQMekdEAJCQAgIgbpCQMRUV92hyggBISAEhICISe+AEBACQkAI1BUCLXVVG1WmRyIwbtw498EHH7jRo0e7mWee2c0111yuubm5R2KhRgsBIeBcQxDTww8/7I477rhcf7W0tLhbb73VTTvttLlrOqkdAmF/TDPNNO7uu+8uuwLDhw+P+/Xll192EydOzD0/YMAAd+SRR7oTTzwxd019noNCJ0JgikegYmJidnvDDTe4t99+23300Uful19+cfPPP79baKGF3LLLLhv/ZYVeW1ubGzNmTF5248ePz/usD7VDIOyPsWPHll04pLTDDju4n3/+ucuzAwcOdL169VKfd0FGF4RAz0CgImK666673Jlnnum+//77PJS+/PJL9/jjj8fXfvWrX7nDDz/cTT/99HlpppQPp5xyinvooYdyzbnkkkvcnHPOmfusk+IIXHTRRYmkxFNMbKY0gYh32223XLOGDRvmjjrqqNxnnQgBIdCJQNnE9NRTT8Xml1K/lnH//fe75557zv373/92gwcP7ixxCjl777333HfffZdrDVqEJD0CjzzySF7imWaaye20006O92qZZZZxX331Vd79Rv/w+eef570vWBwkQkAIJCNQFjFhPvvzn/8cDx7J2eVfXWKJJdxss82Wf3EK+cQMWFIZAj/99FMXbWnLLbd0u+yySy7DKY2Y9L7kulYnQqAkAmURE/4kBhVf1lhjDbfvvvvGBPT++++72267zWHqm2eeedwJJ5zgmpqa/OS5c3wLb775Zvw3YcIEt8ACC7iFF144jsrKJarw5OOPP47zxfeFtrbgggvG/q/evXsXzRGth2fQhjjOMMMM8bOLLLKI69evX+ygR0saOXKk++abb/Ly4hnzl8wyyywF20Ea6meCL4V2+/LGG2/kPhKdht/Ol7feeisvWGDeeed1U001lZ8k9vm98847jj/qO99888VtmXvuufPS2Qd8hB9++KF9dHPMMYebbrrpXGtra6z5vvjii3EZm2yySS5NsRPK5VkT3gNwxPzLvVD69+/vaDftoD3lChoJ7yfvIMETYApu5BsK7aS9JrPOOqtDYzP5+uuv8/qXydWMM85ot2PNB7O1CcEfhXDFN8o74/cpz/3www951xZddFHLLnekjuX0Ye7B4OSTTz6JIx653KdPn/i7wDlteOyxx+K20jfrrLOO+/HHHx1Ymli/2WciKMHYF9oOBkih94jgFvrnhRdecExw+b5jsk3qHz9vnfdMBMoiJgbEUPbcc8/4JeP60ksvHf9tvfXW8Re50Et3++23u9NOO62Lc5svAXb43/3ud7HzOyyr1GfI4q9//at7+umnuyQlBBm/EAEaScIX5uSTT44JKbzPwPSXv/wlHqh33HHH8Hb8+U9/+lPuOkT929/+NvfZP8EvRR19IcrNIgw//fRTt+uuu+Zug8kDDzyQ89WNGjUq1ix8U+odd9yRR0xEyJ1++unxIJPLaNLJKqus4o4++mg3aNCgvFtPPvmk89tw2GGHuRVWWMHtvffeeb7EJZdcMu+5pA8333yzO+mkk/JubbTRRnG7119//TxStURnn312fMoAecUVV9jlksdvv/027rdHH320S1oGyz/+8Y9u8803z7t3wAEHuBEjRuSubbfddo72mpx11lnuvvvus49u2223jf2lduHyyy93V199tX10m266qTv22GNzn/0T3pukuj377LOOP4TJiZ3bs5X0oT0bHg855JDcZIjJBu/g3//+d3f99dfnkmI+hZhuuukmd9555+WuMyHj3TD54osv8t5Prp977rlupZVWipOE79FBBx0Uf+fAhwmSL0OHDnVnnHHGFGnq99up8/IR6FXOI/6s0Z5jQPnss8/sY3xcfPHF3eyzz553zT4Q9s3AHEbZcZ/B9rLLLssbBOy5UkdmYwwwSaTEswz4kN5rr73WJSu+WPvss08iKZGYmSXBHlkI5B2KP5t+6aWX8m6D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3fsKZdGurNqifIRAvSDQEBpTWrD+7//+z7399tuOwYJItDnnnDPv0WuvvTb2eXARJ/sKK6wQ32eQv/32290zzzwTm6Zs4MJnsthii7mDDz44N7j6GR5++OGxn2X33Xd3yy67rPvXv/7lXnjhBffLL7/EyYZEARnbb7+9I4SYPCkff8o333wT329ubnbbbbed22abbbpohE8++aS74IIL3IABA9y5557rbrnlFvfAAw/EJjMepm6YMAkoWGihheL8yvlH0AJBB7feeqv77rvvco8OHDjQ7bbbbm611VbLXSt0Qvtw9kOwPsGQnmv0BbLJJpu4K6+8MsYKEpxpppni6/zDt4SQD/mFgtkMHCA5I3L6lxD4vffe2/nkaM/+73//c+ecc07szwK7+++/P8aP8G5kn332cRtuuKElL3i89NJLcxrhr3/9a0foN3Xx8TrkkEPi941MLrvsstTBD+W26w9/+IP79ttvY4x4z0M55phjHMTLO3XxxRe7Pn365CWxd5/3hvuEt0saHwH6lb9KhLGJv3qU7k336qxFW221lfv5559jxzRRU74wIN58881u9OjRMWHhG0BefvnleICjc5mRGylxj8GbAfGwww5LnKWjYZDfc889F6eBTIyUeJ78zj77bPf555+7k046yd1www05UuI+ZRFefO+99/IxT9DcyJvBlMGP6DbCv02oG2YwBiQG4nKEEGfCmBl4bZC1aDIGv9NOOy3Vy84gyGCNGMFYPdA4KaelpcXhIyQtYlqUpTNCm2eeeXJp7B7BLwzIrBUyUuLexIkTY83pyCOPdERvhkIfgN1XX33lCOs+//zzYxwtXRKZ2T07PvTQQ/FkhXwwWW622WaxlsqaJQvmIC2TGtLwl1YqaRdmUspAs+Ud94XraKMceSeTollfeuml+P4ss8wiUvLBa/DzSsml0udqBdcUpTEtssgibr311otnyHxRH3vsMbfmmmvGWP7nP/+JB0oGSGbMFkGGjwASmGqqqeLBZ6mllopnpWg1zI7ffPPNeKb64IMPuo022iixX9C0kFVXXTUehIk8u+aaa9zTTz8dD1y///3v4/sM4ltuuWU823/88cdzgz9aS7EZPATHgMLLtMQSS8TEi7bzyCOPxAM2mtpyyy3XZWCPC034d+ONN8aDPbfQ5vbcc08388wzxwM5REqbIdG11lrLDRo0KCGH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KqZOQ6khsSQFPliGvimMa5BasZ2rWcx61A3j3T/unZC4FyJh6fdFv8O15yXj83bVtvI4/tI5D4jy8O90Pc9Pm4+ppWbPQf9d2Xr5TqMKWrc9Zf1jz9mR+lroPNcI+ebnP3zJot3kx/tNyLcvfuCDXUeL8lPxTr2eYI619DpOfgSa2iNJU421Tw6mjmkeUprMEECbWHm+5njXazb/LLR9EV96dl9g8SzrlPCJ1KMwVA2OBizCqvtEbXs12hD122Dvv3qsdzXrxH5+aEodPxQ4MdYa8aU0mhD0Qsg80YSjfmELobaC5k/aNqW0u9H6qZb1JXq4HBExlYNWnaQlnBofBAEGtpklTnH+2CWgEQezOoFW1RACQqAKCJRLTJ16ehUqoyyrgwChrkQe+dFH1SlJuQoBISAEao+AfEy1x1wlCgEhIASEQBEERExFwNEtISAEhIAQqD0CIqbaY64ShYAQEAJCoAgCIqYi4OiWEBACQkAI1B4BEVPtMVeJQkAICAEhUAQBEVMRcHRLCAgBISAEao+AiKn2mKtEISAEhIAQKIKAiKkIOLolBISAEBACtUdAxFR7zFWiEBACQkAIFEFAxFQEHN0SAkJACAiB2iMgYqo95ipRCAgBISAEiiAgYioCjm4JASEgBIRA7REQMdUec5UoBISAEBACRRAQMRUBR7eEgBAQAkKg9giImGqPuUoUAkJACAiBIgik/qHAInnolhAQAkJACAiBzBCQxpQZlMpICAgBISAEskBAxJQFispDCAgBISAEMkNAxJQZlMpICAgBISAEskBAxJQFispDCAgBISAEMkNAxJQZlMpICAgBISAEskBAxJQFispDCAgBISAEMkNAxJQZlMpICAgBISAEskBAxJQFispDCAgBISAEMkNAxJQZlMpICAgBISAEskBAxJQFispDCAgBISAEMkNAxJQZlMpICAgBISAEskBAxJQFispDCAgBISAEMkNAxJQZlMpICAgBISAEskBAxJQFispDCAgBISAEMkNAxJQZlMpICAgBISAEskBAxJQFispDCAgBISAEMkNAxJQZlMpICAgBISAEskDg/wHTtxFLIs6rzQAAAABJRU5ErkJggg==" width="200" alt="Workflow ui elements" />
+<div class="figcaption">Workflow ui elements</div>
+</div>
+</div>
+<div id="preloading-the-app-with-content" class="section level2">
+<h2>Preloading the app with content</h2>
+<p>First you need to unzip the contents of the save analysis into a
+directory. Next, in the same directory where you unziped the contents of
+the analysis, you need to create an app file and also create the
+DEPLOYED file if you want to deploy the app. This will use the test app
+that ships with <code>formods</code>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">file.copy</span>(<span class="at">from =</span> <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;formods&quot;</span>,<span class="st">&quot;templates&quot;</span>, <span class="st">&quot;FM_compact.R&quot;</span>), </span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>          <span class="at">to   =</span> <span class="st">&quot;App.R&quot;</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="fu">file.create</span>(<span class="st">&quot;DEPLOYED&quot;</span>)</span></code></pre></div>
+<p>Now when you run the app, the preload file will be detected and the
+contents will be loaded into the app. This is done with the following
+code in the app:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="cf">if</span>(<span class="fu">file.exists</span>(<span class="st">&quot;preload.yaml&quot;</span>)){</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  shinybusy<span class="sc">::</span><span class="fu">show_modal_spinner</span>(<span class="at">text=</span><span class="st">&quot;Preloading analysis, be patient&quot;</span>, <span class="at">session=</span>session)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  res <span class="ot">=</span> <span class="fu">FM_app_preload</span>(<span class="at">session=</span>session, <span class="at">sources=</span><span class="st">&quot;preload.yaml&quot;</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  shinybusy<span class="sc">::</span><span class="fu">remove_modal_spinner</span>(<span class="at">session =</span> session)</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

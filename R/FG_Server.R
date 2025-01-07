@@ -1344,23 +1344,24 @@ FG_Server <- function(id,
 #'    \item{DSV:}              Available data sets from the UD and DW modules.
 #'    \item{figs:}             List of figures. Each view has the following structure:
 #'      \itemize{
-#'        \item{add_isgood:    JMH}
+#'        \item{add_isgood:     Boolean indicating the success/failure of adding the last figure elemnt.}
 #'        \item{checksum:       Checksum of the figure used to detect changes in the figure.}
 #'        \item{code:           Code to generate figure from start to finish.}
 #'        \item{code_fg_only:   Code to just generate the figure.}
 #'        \item{code_previous:  Code to load and/or wrangle the dataset.}
 #'        \item{elements_table: Table of figure generation elements.}
-#'        \item{fg_object_name: JMH}
+#'        \item{fg_object_name: The object name that contains the figure in the generated code.}
 #'        \item{fig_dsview:     Name of the dataset view for the current figure (also the R object name of the dataset view).}
-#'        \item{fobj:           JMH}
+#'        \item{fobj:           The ggplot object of the figure.}
 #'        \item{id:             Character id (\code{fig_idx})}
 #'        \item{idx:            Numeric id (\code{1})}
 #'        \item{isgood:}        Boolean status of the figure. FALSE if evaluation/build fails.
 #'        \item{key:            Figure key acts as a title/caption (user editable)}
-#'        \item{msgs:           JMH}
+#'        \item{msgs:           Any messages generated when building the
+#'        figure.}
 #'        \item{notes:          Figure notes  (user editable)}
-#'        \item{num_pages:      JMH}
-#'        \item{page:           JMH}
+#'        \item{num_pages:      Number of pages in the figure.}
+#'        \item{page:           The currently selected figure page.}
 #'      }
 #'  }
 #'  \item{MOD_TYPE:} Character data containing the type of module \code{"DW"}
@@ -1492,7 +1493,7 @@ FG_fetch_state = function(id,
 
     # Forcing a figure rebuild when a database change has been detected
     # JMH should we loop through all figures and rebuild them all?
-    state = FG_build( state=state, del_row = NULL, cmd = NULL)
+    state = FG_build( state=state, del_row = NULL, cmd = NULL, pll=NULL)
   }
   #---------------------------------------------
   # Here we update the state based on user input
@@ -1521,7 +1522,7 @@ FG_fetch_state = function(id,
           if(nrow(current_fig[["elements_table"]]) == nrow(hot_df)){
             # Flagging that row for removal and forcing a rebuild of the figure:
             del_row = which(hot_df$Delete == TRUE)
-            state = FG_build( state=state, del_row = del_row, cmd = NULL)
+            state = FG_build( state=state, del_row = del_row, cmd = NULL, pll=NULL)
           }
         }
       }
@@ -1535,7 +1536,6 @@ FG_fetch_state = function(id,
       (!fetch_hold(state, "select_current_fig"))){
 
     # Changing the current view to the one selected in the UI
-    # JMH create FG_mkactive_fig here to set active
     state[["FG"]][["current_fig"]]  =  state[["FG"]][["ui"]][["select_current_fig"]]
   }
 
@@ -1544,7 +1544,6 @@ FG_fetch_state = function(id,
                  old_val  =  FG_fetch_current_fig(state)[["page"]])
       #(!fetch_hold(state, "select_fg_page"))
       ){
-
 
     FM_le(state, "figure page change detected")
 
@@ -1578,6 +1577,7 @@ FG_fetch_state = function(id,
       # Evaluating the element
       state = FG_build( state,
         cmd     = fgb_res[["cmd"]],
+        pll     = fgb_res[["pll"]],
         element = fgb_res[["element"]],
         desc    = fgb_res[["desc"]])
     }
@@ -1695,7 +1695,7 @@ FG_fetch_state = function(id,
     state = FM_set_ui_msg(state, msgs)
 
     # Forcing a rebuild of the figure:
-    state = FG_build( state=state, del_row = NULL, cmd = NULL)
+    state = FG_build( state=state, del_row = NULL, cmd = NULL, pll = NULL)
   }
   # Copy figure
   if(has_changed(ui_val   = state[["FG"]][["ui"]][["button_fig_copy"]],
@@ -1734,11 +1734,13 @@ FG_fetch_state = function(id,
   # new_fig[["DW_checksum"   ]]  = old_fig[["DW_checksum"   ]]
   # new_fig[["DSV_checksum"  ]]  = old_fig[["DSV_checksum"  ]]
     new_fig[["elements_table"]]  = old_fig[["elements_table"]]
+    new_fig[["elements_list" ]]  = old_fig[["elements_list" ]]
     new_fig[["code"          ]]  = old_fig[["code"          ]]
     new_fig[["fobj"          ]]  = old_fig[["fobj"          ]]
     new_fig[["code_previous" ]]  = old_fig[["code_previous" ]]
     new_fig[["code_fg_only"  ]]  = old_fig[["code_fg_only"  ]]
     new_fig[["notes"         ]]  = old_fig[["notes"         ]]
+    new_fig[["fge_cntr"      ]]  = old_fig[["fge_cntr"      ]]
 
     # Now we dump the new figure with the old components
     # copied into it back into the state object:
@@ -1838,6 +1840,28 @@ FG_init_state = function(FM_yaml_file, MOD_yaml_file, id, id_UD, id_DW, session)
       }
     }
 
+
+    # these are more manually generated and the lists map ui values to names
+    # used in export/import yaml files
+    manual_elements = list(
+    facet = list(
+      mapping = list(
+        select_component_facet        = "column",
+        select_component_facet_scales = "scales",
+        select_component_facet_nrow   = "nrow",
+        select_component_facet_ncol   = "ncol")),
+    label = list(
+      mapping = list(
+        text_component_xlab           = "xlab",
+        text_component_ylab           = "ylab",
+        text_component_ggtitle        = "title")),
+    scales = list(
+      mapping = list(
+        select_component_xscale       = "xscale",
+        select_component_yscale       = "yscale",
+        text_component_xlim           = "xlim",
+        text_component_ylim           = "ylim")))
+
     # Adding other ui_ids here
     ui_ids = c(ui_ids,
       "button_fig_new",
@@ -1848,29 +1872,18 @@ FG_init_state = function(FM_yaml_file, MOD_yaml_file, id, id_UD, id_DW, session)
       "hot_fg_elements",
       "text_fig_key",
       "text_fig_notes",
-      "text_component_xlab",
-      "text_component_ylab",
-      "text_component_xlim",
-      "text_component_ylim",
-      "text_component_ggtitle",
       "select_fg_page",
       "select_current_fig",
       "select_current_view",
-      "select_component_facet",
-      "select_component_facet_scales",
-      "select_component_facet_nrow",
-      "select_component_facet_ncol",
-      "select_component_xscale",
-      "select_component_yscale",
+       names(manual_elements[["facet"]][["mapping"]]),
+       names(manual_elements[["scales"]][["mapping"]]),
+       names(manual_elements[["label"]][["mapping"]]),
       "select_fg_element")
 
     # Since some IDs can be reused in the elements above we do this to
     # remove any extras:
     ui_ids = unique(ui_ids)
   }
-
-  # JMH remove this
-  #state_tmp = state
 
   # Names of button elements:
   button_counters = c(
@@ -1925,7 +1938,8 @@ FG_init_state = function(FM_yaml_file, MOD_yaml_file, id, id_UD, id_DW, session)
   state[["FG"]][["aes_elements"]]  = aes_elements
   # JMH replace with tis
   # This adds the automatically created elements:
-  state[["FG"]][["auto_elements"]] = auto_elements
+  state[["FG"]][["auto_elements"]]   = auto_elements
+  state[["FG"]][["manual_elements"]] = manual_elements
 
   FM_le(state, "State initialized")
 
@@ -1979,7 +1993,9 @@ FG_new_fig    = function(state){
          notes          = "",
          isgood         = TRUE,
          add_isgood     = TRUE,
-         elements_table = NULL)
+         fge_cntr       = 1,
+         elements_table = NULL,
+         elements_list  = list())
 
   # Setting the new figure id as the current figure
   state[["FG"]][["current_fig"]]    = fig_id
@@ -1988,7 +2004,7 @@ FG_new_fig    = function(state){
   state = FG_set_current_fig(state, fig_def)
 
   # Creating the new figure pages
-  state = FG_build(state, NULL)
+  state = FG_build(state=state, del_row = NULL, cmd = NULL, pll = NULL)
 
 state}
 
@@ -2042,23 +2058,26 @@ state}
 #'  \item{isgood:} Return status of the function.
 #'  \item{cmd:}    ggplot R command as a character string
 #'  \item{element:} The type of element being added
+#'  \item{pll:}    Preload list (pll) containing components to save with
+#'  mk_preload.
 #'  \item{desc:}   Verbose description of the element
 #'  \item{msgs:}   Messages to be passed back to the user
 #'}
 #'@examples
 #'\donttest{
-#' sess_res = FG_test_mksession(session=list(), full_session=FALSE)
+#' sess_res = FG_test_mksession()
 #' state = sess_res$state
 #' fb_res = fers_builder(state)
 #'}
 fers_builder = function(state){
 
-  isgood = TRUE
-  msgs   = c()
-  cmd    = ""
-  desc   = ""
-  descs  = c()
-  element= ""
+  isgood   = TRUE
+  msgs     = c()
+  cmd      = ""
+  desc     = ""
+  descs    = c()
+  pll      = list()
+  element  = ""
 
   element        = state[["FG"]][["ui"]][["select_fg_element"]]
   ui             = state[["FG"]][["ui"]]
@@ -2068,18 +2087,16 @@ fers_builder = function(state){
   current_fig = FG_fetch_current_fig(state)
   fg_object_name = current_fig[["fg_object_name"]]
 
-  # Pulling out the element configuration from the yaml file:
-  # JMH remove this
-  #element_cfg = state[["MC"]][["elements"]][[element]]
-
-  # JMH replace with this:
   # Pulling out the element components
   element_cfg                       = state[["MC"]][["elements"]][[element]]
-  # JMH adding the select and manual id elements
+  # adding the select and manual id elements
   element_cfg[["ui_aes_select_id"]] = state[["FG"]][["auto_elements"]][[element]][["ui_aes_select_id"]]
   element_cfg[["ui_aes_manual_id"]] = state[["FG"]][["auto_elements"]][[element]][["ui_aes_manual_id"]]
 
+
   if(element%in% aes_elements){
+    # Defining the preload type
+    pll[["type"]] = element
 
     # The geom function name:
     fcn = element_cfg[["fcn"]]
@@ -2114,15 +2131,25 @@ fers_builder = function(state){
             # If the selection is "manual" then we add it to
             # the list of manual components
             man_rhs = autocast(ui[[man_idx]], quote_char=TRUE)
+
+            # The preload list just needs the raw input passed to it
+            man_rhs_pll = ui[[man_idx]] 
             man_comp = c(man_comp, paste0(comp_idx, "=", man_rhs))
 
             # updating description
             descs = c(descs, paste0(comp_idx,":", man_rhs))
+
+            # Adding manual component to the preload list:
+            pll[["manual"]][[comp_idx]] = man_rhs_pll 
           }
         } else {
           aes_comp = c(aes_comp, paste0(comp_idx, "=", ui[[sel_idx]]))
+
           # updating description
           descs = c(descs, paste0(comp_idx,":", ui[[sel_idx]]))
+
+          # Adding manual component to the preload list:
+          pll[["aes"]][[comp_idx]] = ui[[sel_idx]]
         }
       }
     }
@@ -2144,6 +2171,9 @@ fers_builder = function(state){
     # creating the description
     desc = paste(descs, collapse = ", ")
   } else if(element == "facet"){
+    # Defining the preload type
+    pll[["type"]] = element
+
     # We want to make sure at least one column has been selected
     if(ui[["select_component_facet"]][1] == ""){
       isgood = FALSE
@@ -2152,26 +2182,20 @@ fers_builder = function(state){
     } else {
 
       # Getting the facet scales
-      if(ui[["select_component_facet_scales"]] %in% names(state[["MC"]][["formatting"]][["components"]][["facet_scales"]][["choices"]])){
-        facet_scales = ui[["select_component_facet_scales"]]
-      } else {
-        facet_scales = state[["MC"]][["formatting"]][["components"]][["facet_scales"]][["default"]]
+      if(!(ui[["select_component_facet_scales"]] %in% names(state[["MC"]][["formatting"]][["components"]][["facet_scales"]][["choices"]]))){
+        ui[["select_component_facet_scales"]] = state[["MC"]][["formatting"]][["components"]][["facet_scales"]][["default"]]
         msgs = c(msgs, "Unable to determine facet scales from ui using default")
       }
 
 
       # Number of rows
-      if(ui[["select_component_facet_nrow"]] %in% state[["MC"]][["formatting"]][["components"]][["facet_dims"]][["nrow"]][["choices"]]){
-        facet_nrow =  ui[["select_component_facet_nrow"]]
-      } else {
-        facet_nrow = state[["MC"]][["formatting"]][["components"]][["facet_dims"]][["nrow"]][["default"]] 
+      if(!(ui[["select_component_facet_nrow"]] %in% state[["MC"]][["formatting"]][["components"]][["facet_dims"]][["nrow"]][["choices"]])){
+        ui[["select_component_facet_nrow"]] = state[["MC"]][["formatting"]][["components"]][["facet_dims"]][["nrow"]][["default"]]
       }
 
       # Number of columns
-      if(ui[["select_component_facet_ncol"]] %in% state[["MC"]][["formatting"]][["components"]][["facet_dims"]][["ncol"]][["choices"]]){
-        facet_ncol =  ui[["select_component_facet_ncol"]]
-      } else {
-        facet_ncol = state[["MC"]][["formatting"]][["components"]][["facet_dims"]][["ncol"]][["default"]] 
+      if(!(ui[["select_component_facet_ncol"]] %in% state[["MC"]][["formatting"]][["components"]][["facet_dims"]][["ncol"]][["choices"]])){
+        ui[["select_component_facet_ncol"]] = state[["MC"]][["formatting"]][["components"]][["facet_dims"]][["ncol"]][["default"]]
       }
 
       # The faceting command will depend on the number of columns selected
@@ -2183,11 +2207,13 @@ fers_builder = function(state){
                      ui[["select_component_facet"]][1],
                      "~",
                      ui[["select_component_facet"]][2],
-                     ", scales = ", deparse(facet_scales),
-                     ", nrow = ", facet_nrow,
-                     ", ncol = ", facet_ncol,
+                     ", scales = ", deparse( ui[["select_component_facet_scales"]] ),
+                     ", nrow = ", ui[["select_component_facet_nrow"]],
+                     ", ncol = ", ui[["select_component_facet_ncol"]],
                      ", page=1",
                      ")")
+
+
 
       } else{
         cmd = paste0(
@@ -2195,18 +2221,27 @@ fers_builder = function(state){
                      "ggforce::facet_wrap_paginate(vars(",
                      paste0(ui[["select_component_facet"]], collapse=", ")
                      , ")",
-                     ", scales = ", deparse(facet_scales),
-                     ", nrow = ", facet_nrow,
-                     ", ncol = ", facet_ncol,
+                     ", scales = ", deparse( ui[["select_component_facet_scales"]] ),
+                     ", nrow = ", ui[["select_component_facet_nrow"]],
+                     ", ncol = ", ui[["select_component_facet_ncol"]],
                      ", page=1",
                      ")")
 
+      }
+
+      # Defining the preload options for faceting
+      for(uiname in names(state[["FG"]][["manual_elements"]][[element]][["mapping"]])){
+        pll[["options"]][[
+           state[["FG"]][["manual_elements"]][[element]][["mapping"]][[ uiname ]]
+         ]] = ui[[uiname]]
       }
 
       desc = paste0(ui[["select_component_facet"]], collapse= ", ")
 
     }
   } else if(element == "scales"){
+    # Defining the preload type
+    pll[["type"]] = element
 
     cmds      = c() # All the scale commands
     descs     = c() # All the descriptions
@@ -2257,9 +2292,19 @@ fers_builder = function(state){
       }
 
     }
+
+    # Defining the preload options for faceting
+    for(uiname in names(state[["FG"]][["manual_elements"]][[element]][["mapping"]])){
+      pll[["options"]][[
+         state[["FG"]][["manual_elements"]][[element]][["mapping"]][[ uiname ]]
+       ]] = ui[[uiname]]
+    }
+
     cmd  = paste0(cmds,  collapse= " \n")
     desc = paste0(descs, collapse= ", ")
   } else if(element == "label"){
+    # Defining the preload type
+    pll[["type"]] = element
 
     # We'll construct the indiviudal commands xlab(), ylab(), etc, and
     # Combine them in the end
@@ -2286,6 +2331,15 @@ fers_builder = function(state){
                     paste0(cmds, collapse = " + "))
       desc = paste0(descs, collapse= ", ")
     }
+
+    # Defining the preload options for faceting
+    for(uiname in names(state[["FG"]][["manual_elements"]][[element]][["mapping"]])){
+      pll[["options"]][[
+         state[["FG"]][["manual_elements"]][[element]][["mapping"]][[ uiname ]]
+       ]] = ui[[uiname]]
+    }
+
+
   }else{
     isgood = FALSE
     err_msg =
@@ -2298,6 +2352,7 @@ fers_builder = function(state){
   res = list(isgood   = isgood,
              cmd      = cmd,
              element  = element,
+             pll      = pll,
              desc     = desc,
              msgs     = msgs)
 
@@ -2313,18 +2368,23 @@ res}
 #'@param del_row Row number to be deleted (NULL if no rows need to be deleted)
 #'@param cmd String containing the plotting command.  Set to NULL to initialize a
 #'new figure or force a rebuild after a dataset update.
+#'@param pll Preload list for the plotting command.  Set to NULL to initialize a
+#'new figure or force a rebuild after a dataset update.
 #'@param element Short name for the figure element being performed, eg. point
 #'@param desc Verbose description for the action being performed
-#'@return list with the following elements
-#'\itemize{
-#'  \item{isgood:} Return status of the function.
-#'  \item{msgs:}   Messages to be passed back to the user.
-#'  \item{pages:}  List with each element containing a ggplot object (\code{p}) and the code to generate that object (\code{code})
-#'}
+#'@return State with the build result stored in the current figure. Pull out
+#'the figure to inspect it:
+#'
+#' current_fig = FG_fetch_current_fig(state)
+#'
+#' Look at this logical object to test if the build worked.
+#'
+#' current_fig[["add_isgood"]]
 #'@example inst/test_apps/FG_funcs.R
 FG_build = function(state,
                    del_row     = NULL,
                    cmd         = NULL,
+                   pll         = NULL,
                    element     = "unknown",
                    desc        = "unknown"){
 
@@ -2361,6 +2421,9 @@ FG_build = function(state,
 
     # Here we process row deletions
     if(!is.null(curr_ET) & !is.null(del_row)){
+      # Removing the preload component
+      current_fig[["elements_list"]][[ curr_ET[del_row, ][["Key"]] ]] = NULL
+
       # Removing the specified row from the elements table:
       curr_ET = curr_ET[-c(del_row), ]
 
@@ -2397,10 +2460,15 @@ FG_build = function(state,
 
             # We flag that we found a duplicate:
             dupe_found = TRUE
+
+            # Updating the preload component with the new one:
+            current_fig[["elements_list"]][[ curr_ET[row_idx, ][["Key"]] ]][["pll"]] = pll
+
             # Then we replace the cmd and Description elements of the old row
             # with the new one:
             curr_ET[row_idx, ][["cmd"]]         = cmd
             curr_ET[row_idx, ][["Description"]] = desc
+
             msgs = c(msgs,
               stringr::str_replace_all(
                 state[["MC"]][["errors"]][["only_one_element"]],
@@ -2461,13 +2529,22 @@ FG_build = function(state,
             if(tcres[["isgood"]]){
               # If the try catch was successful we extract the updated plot object
               assign(fg_object_name, tcres[["capture"]][[fg_object_name]])
+              fge_key = paste0("FGE ", current_fig[["fge_cntr"]])
               # Then we add the new row to the event table
               curr_ET = rbind(curr_ET,
-                    data.frame(Element     = element,
+                    data.frame(Key         = fge_key,
+                               Element     = element,
                                cmd         = cmd,
                                Description = desc,
                                Status      = "Success",
                                Delete      = FALSE))
+
+              # Adding to the list
+              current_fig[["elements_list"]][[fge_key]][["pll"]] = pll
+
+              # Incrementing the counter
+              current_fig[["fge_cntr"]] = current_fig[["fge_cntr"]] + 1
+
               # Saveing the command for the code block
               code_lines = c(code_lines, cmd)
             } else {
@@ -2547,7 +2624,6 @@ FG_build = function(state,
     }
 
     # Code for the modules feeding into this one
-    # JMH check this code works
     code_previous   = state[["FG"]][["DSV"]][["ds"]][[current_fig[["fig_dsview"]]]][["code"]]
 
     # Just the code to build the figure
@@ -2589,7 +2665,7 @@ state}
 #'@examples
 #'# This will create a populated FG state object:
 #'\donttest{
-#' sess_res = FG_test_mksession(session=list(), full_session=FALSE)
+#' sess_res = FG_test_mksession()
 #' state   = sess_res$state
 #' state = FG_update_checksum(state)
 #'}
@@ -2663,7 +2739,7 @@ fobj}
 #'@examples
 #'\donttest{
 #'# This will create a populated FG state object:
-#'sess_res = FG_test_mksession(session=list(), full_session=FALSE)
+#'sess_res = FG_test_mksession()
 #'state   = sess_res$state
 #'code  = FG_fetch_code(state)
 #'cat(paste(code, collapse="\n"))
@@ -2702,7 +2778,7 @@ code}
 #'@seealso \code{\link{FM_generate_report}}
 #'@examples
 #'\donttest{
-#' sess_res = FG_test_mksession(session=list(), full_session=FALSE)
+#' sess_res = FG_test_mksession()
 #' state = sess_res$state
 #' # This will read in the default PowerPoint report template
 #' rpt =
@@ -2882,233 +2958,471 @@ res}
 #'@title Populate Session Data for Module Testing
 #'@description Populates the supplied session variable for testing.
 #'@param session Shiny session variable (in app) or a list (outside of app)
-#'@param id An ID string that corresponds with the ID used to call the modules UI elements
-#'@param id_UD An ID string that corresponds with the ID used to call the UD modules UI elements
-#'@param id_DW An ID string that corresponds with the ID used to call the DW modules UI elements
-#'@param full_session  Boolean to indicate if the full test session should be created (default \code{TRUE}).
+#' session = shiny::MockShinySession$new().
+#'@param full Boolean indicating if the full test session should be created.
+#'@return The FG portion of the `all_sess_res` returned from \code{\link{FM_app_preload}}
+#'@examples
+#' session = shiny::MockShinySession$new()
+#' sess_res = FG_test_mksession(session=session)
+#'@seealso \code{\link{FM_app_preload}}
+FG_test_mksession = function(session=list(), full=FALSE){
+  if(full){
+    sources = c(system.file(package="formods", "preload", "ASM_preload.yaml"),
+                system.file(package="formods", "preload", "UD_preload.yaml"),
+                system.file(package="formods", "preload", "DW_preload.yaml"),
+                system.file(package="formods", "preload", "FG_preload.yaml"))
+  } else {
+    sources = c(system.file(package="formods", "preload", "ASM_preload.yaml"),
+                system.file(package="formods", "preload", "UD_preload.yaml"),
+                system.file(package="formods", "preload", "DW_preload.yaml"),
+                system.file(package="formods", "preload", "FG_preload_minimal.yaml"))
+  }
+  res = FM_app_preload(session=session, sources=sources)
+  res = res[["all_sess_res"]][["FG"]]
+
+res}
+
+
+#'@export
+#'@title Preload Data for FG Module
+#'@description Populates the supplied session variable with information from
+#'list of sources.
+#'@param session     Shiny session variable (in app) or a list (outside of app)
+#'@param src_list    List of preload data (all read together with module IDs at the top level)
+#'@param yaml_res    List data from module yaml config
+#'@param mod_ID      Module ID of the module being loaded.
+#'@param react_state Reactive shiny object (in app) or a list (outside of app) used to trigger reactions.
+#'@param quickload   Logical \code{TRUE} to load reduced analysis \code{FALSE} to load the full analysis
 #'@return list with the following elements
 #' \itemize{
-#'   \item{isgood:} Boolean indicating the exit status of the function.
-#'   \item{session:} The value Shiny session variable (in app) or a list (outside of app) after initialization.
-#'   \item{input:} The value of the shiny input at the end of the session initialization.
-#'   \item{state:} App state.
-#'   \item{rsc:} The \code{react_state} components.
+#'   \item{isgood:}      Boolean indicating the exit status of the function.
+#'   \item{msgs:}        Messages to be passed back to the user.
+#'   \item{session:}     Session object
+#'   \item{input:}       The value of the shiny input at the end of the session initialization.
+#'   \item{state:}       App state.
+#'   \item{react_state:} The \code{react_state} components.
 #'}
-#'@examples
-#'\donttest{
-#' sess_res = FG_test_mksession(session=list(), full_session=FALSE)
-#'}
-FG_test_mksession = function(session, id = "FG", id_UD="UD", id_DW="DW", full_session=TRUE){
-
+FG_preload  = function(session, src_list, yaml_res, mod_ID=NULL, react_state = list(), quickload=FALSE){
   isgood = TRUE
-  rsc    = NULL
   input  = list()
+  msgs   = c()
+  res    = c()
 
-  # Populating the session with UD and DW components
-  sess_res = DW_test_mksession(session=session, id=id_DW, id_UD = id_UD)
-  if(!("ShinySession" %in% class(session))){
-    session = sess_res[["session"]]
-  }
 
-  # Pulling out the react state components
-  rsc         = sess_res$rsc
-  react_state = rsc
-
-  # YAML files for the fetch calls below
-  FM_yaml_file  = system.file(package = "formods", "templates", "formods.yaml")
-  MOD_yaml_file = system.file(package = "formods", "templates", "FG.yaml")
-
-  # empty input
-  input = list()
+  FM_yaml_file  = render_str(src_list[[mod_ID]][["fm_yaml"]])
+  MOD_yaml_file = render_str(src_list[[mod_ID]][["mod_yaml"]])
+  id_UD         = yaml_res[[mod_ID]][["mod_cfg"]][["MC"]][["module"]][["depends"]][["id_UD"]]
+  id_ASM        = yaml_res[[mod_ID]][["mod_cfg"]][["MC"]][["module"]][["depends"]][["id_ASM"]]
+  id_DW         = yaml_res[[mod_ID]][["mod_cfg"]][["MC"]][["module"]][["depends"]][["id_DW"]]
 
   # Creating an empty state object
-  state = FG_fetch_state(id              = id,
+  state = FG_fetch_state(id              = mod_ID,
                          input           = input,
                          session         = session,
                          FM_yaml_file    = FM_yaml_file,
                          MOD_yaml_file   = MOD_yaml_file,
-                         id_ASM          = "ASM",
+                         id_ASM          = id_ASM,
                          id_UD           = id_UD,
                          id_DW           = id_DW,
                          react_state     = react_state)
 
+  elements = src_list[[mod_ID]][["elements"]]
 
-  #------------------------------------
-  # Creating "Individual profiles by cohort" data view
-  state[["FG"]][["ui"]][["text_fig_key"]]        = "Individual profiles by cohort"
-  state[["FG"]][["ui"]][["select_current_view"]] = "DW_myDS_1"
-  current_fig = FG_fetch_current_fig(state)
-  current_fig[["key"]]         = state[["FG"]][["ui"]][["text_fig_key"]]
-  current_fig[["fig_dsview"]]  = state[["FG"]][["ui"]][["select_current_view"]]
-  state = FG_set_current_fig(state, current_fig)
-
-  # Adding the lines
-  state[["FG"]][["ui"]][["select_fg_element"]]          = "line"
-  state[["FG"]][["ui"]][["select_component_x"]]         = "TIME_DY"
-  state[["FG"]][["ui"]][["select_component_y"]]         = "DV"
-  state[["FG"]][["ui"]][["select_component_color"]]     = "CMT"
-  state[["FG"]][["ui"]][["select_component_group"]]     = "IDCMT"
-
-  fgb_res  = fers_builder(state)
-  state = FG_build( state,
-    cmd     = fgb_res[["cmd"]],
-    element = fgb_res[["element"]],
-    desc    = fgb_res[["desc"]])
-
-  # faceting by cohort
-  state[["FG"]][["ui"]][["select_fg_element"]]                = "facet"
-  state[["FG"]][["ui"]][["select_component_facet"]]           = "Cohort"
-  state[["FG"]][["ui"]][["select_component_facet_scales"]]    = state[["MC"]][["formatting"]][["components"]][["facet_scales"]][["default"]]
-  state[["FG"]][["ui"]][["select_component_facet_nrow"]]      = state[["MC"]][["formatting"]][["components"]][["facet_dims"]][["nrow"]][["default"]] 
-  state[["FG"]][["ui"]][["select_component_facet_ncol"]]      = state[["MC"]][["formatting"]][["components"]][["facet_dims"]][["ncol"]][["default"]] 
-
-  fgb_res  = fers_builder(state)
-  state = FG_build( state,
-    cmd     = fgb_res[["cmd"]],
-    element = fgb_res[["element"]],
-    desc    = fgb_res[["desc"]])
-
-  # setting the log scale
-  state[["FG"]][["ui"]][["select_fg_element"]]          = "scales"
-  state[["FG"]][["ui"]][["select_component_yscale"]]    = "log10"
-
-  fgb_res  = fers_builder(state)
-  state = FG_build( state,
-    cmd     = fgb_res[["cmd"]],
-    element = fgb_res[["element"]],
-    desc    = fgb_res[["desc"]])
-
-
-
-  if(full_session){
-    #------------------------------------
-    # Plotting the 3 mg SD IV cohort
-    # Updating the key and data view
-    state = FG_new_fig(state)
-    state[["FG"]][["ui"]][["text_fig_key"]]        = "3 mg SD IV"
-    state[["FG"]][["ui"]][["select_current_view"]] = "DW_myDS_2"
-    current_fig = FG_fetch_current_fig(state)
-    current_fig[["key"]]         = state[["FG"]][["ui"]][["text_fig_key"]]
-    current_fig[["fig_dsview"]]  = state[["FG"]][["ui"]][["select_current_view"]]
-    state = FG_set_current_fig(state, current_fig)
-
-    # Adding the lines
-    state[["FG"]][["ui"]][["select_fg_element"]]          = "line"
-    state[["FG"]][["ui"]][["select_component_x"]]         = "TIME_DY"
-    state[["FG"]][["ui"]][["select_component_y"]]         = "DV"
-    state[["FG"]][["ui"]][["select_component_group"]]     = "ID"
-
-    fgb_res  = fers_builder(state)
-    state = FG_build( state,
-      cmd     = fgb_res[["cmd"]],
-      element = fgb_res[["element"]],
-      desc    = fgb_res[["desc"]])
-
-
-    # setting the log scale
-    state[["FG"]][["ui"]][["select_fg_element"]]          = "scales"
-    state[["FG"]][["ui"]][["select_component_yscale"]]    = "log10"
-
-    fgb_res  = fers_builder(state)
-    state = FG_build( state,
-      cmd     = fgb_res[["cmd"]],
-      element = fgb_res[["element"]],
-      desc    = fgb_res[["desc"]])
-
-    #------------------------------------
-    # Plotting the 3 mg MD SC first dose cohort
-    # Updating the key and data view
-    state = FG_new_fig(state)
-    state[["FG"]][["ui"]][["text_fig_key"]]        = "3 mg SC first dose"
-    state[["FG"]][["ui"]][["select_current_view"]] = "DW_myDS_3"
-    current_fig = FG_fetch_current_fig(state)
-    current_fig[["key"]]         = state[["FG"]][["ui"]][["text_fig_key"]]
-    current_fig[["fig_dsview"]]  = state[["FG"]][["ui"]][["select_current_view"]]
-    state = FG_set_current_fig(state, current_fig)
-
-    # Adding the lines
-    state[["FG"]][["ui"]][["select_fg_element"]]          = "line"
-    state[["FG"]][["ui"]][["select_component_x"]]         = "TIME_DY"
-    state[["FG"]][["ui"]][["select_component_y"]]         = "DV"
-    state[["FG"]][["ui"]][["select_component_group"]]     = "ID"
-
-    fgb_res  = fers_builder(state)
-    state = FG_build( state,
-      cmd     = fgb_res[["cmd"]],
-      element = fgb_res[["element"]],
-      desc    = fgb_res[["desc"]])
-
-
-    # setting the log scale
-    state[["FG"]][["ui"]][["select_fg_element"]]          = "scales"
-    state[["FG"]][["ui"]][["select_component_yscale"]]    = "log10"
-
-    fgb_res  = fers_builder(state)
-    state = FG_build( state,
-      cmd     = fgb_res[["cmd"]],
-      element = fgb_res[["element"]],
-      desc    = fgb_res[["desc"]])
-
-    #------------------------------------
-    # Boxplots of parameters
-    # Updating the key and data view
-    state = FG_new_fig(state)
-    state[["FG"]][["ui"]][["text_fig_key"]]        = "Parameter distribution by Cohort"
-    state[["FG"]][["ui"]][["select_current_view"]] = "DW_myDS_4"
-    current_fig = FG_fetch_current_fig(state)
-    current_fig[["key"]]         = state[["FG"]][["ui"]][["text_fig_key"]]
-    current_fig[["fig_dsview"]]  = state[["FG"]][["ui"]][["select_current_view"]]
-    state = FG_set_current_fig(state, current_fig)
-
-    # Adding the boxplots
-    state[["FG"]][["ui"]][["select_fg_element"]]          = "boxplot"
-    state[["FG"]][["ui"]][["select_component_x"]]         = "parameter"
-    state[["FG"]][["ui"]][["select_component_y"]]         = "values"
-    state[["FG"]][["ui"]][["select_component_fill"]]      = "Cohort"
-    # The select_component* ui elements are recycled in the UI and would
-    # normally be reset to "" when a new figure element is loaded. For the
-    # purposes here we need to reset those manually.
-    state[["FG"]][["ui"]][["select_component_group"]]     = ""
-    state[["FG"]][["ui"]][["select_component_color"]]     = ""
-
-    fgb_res  = fers_builder(state)
-    state = FG_build( state,
-      cmd     = fgb_res[["cmd"]],
-      element = fgb_res[["element"]],
-      desc    = fgb_res[["desc"]])
-
-    # setting the log scale
-    state[["FG"]][["ui"]][["select_fg_element"]]          = "scales"
-    state[["FG"]][["ui"]][["select_component_yscale"]]    = "log10"
-
-    fgb_res  = fers_builder(state)
-    state = FG_build( state,
-      cmd     = fgb_res[["cmd"]],
-      element = fgb_res[["element"]],
-      desc    = fgb_res[["desc"]])
-    #------------------------------------
+  # Checks to see if we can add elements
+  ADD_ELEMENTS = TRUE
+  if(is.null(elements)){
+    ADD_ELEMENTS = FALSE
+  }
+  if(is.null(state[["FG"]][["DSV"]][["hasds"]])){
+    ADD_ELEMENTS = FALSE
+  } else if(!state[["FG"]][["DSV"]][["hasds"]]){
+    ADD_ELEMENTS = FALSE
   }
 
-  # This functions works both in a shiny app and outside of one
-  # if we're in a shiny app then the 'session' then the class of
-  # session will be a ShinySession. Otherwise it'll be a list if
-  # we're not in the app (ie just running test examples) then
-  # we need to set the state manually
-  if(("ShinySession" %in% class(session))){
-    FM_set_mod_state(session, id, state)
+  if(ADD_ELEMENTS){
+    # All of the numeric IDs in the preload
+    enumeric    = c()
+
+    # Map between list index and internal figure ID
+    element_map = list()
+    for(ele_idx in 1:length(elements)){
+      enumeric = c(enumeric, elements[[ele_idx]][["element"]][["idx"]])
+      element_map[[ paste0("Fig_",elements[[ele_idx]][["element"]][["idx"]] )]] = ele_idx
+    }
+
+    # Creating empty fig placeholders
+    while(state[["FG"]][["fig_cntr"]] < max(enumeric)){
+      state = FG_new_fig(state)
+    }
+    # culling any unneeded views
+    for(fig_id  in names(state[["FG"]][["figs"]])){
+      # This is a view that doesn't exist in elements so
+      # we need to cull it
+      if(!(fig_id  %in% names(element_map))){
+        # Setting the view to be deleted as the current view
+        state[["FG"]][["figs"]][[ fig_id  ]] = NULL
+      }
+    }
+
+    # Creating some local variables to make it easier below
+    # This contains all plot types:
+    plot_elements = state[["MC"]][["elements"]]
+
+    # these are the elements defined by aesthetics
+    aes_elements  = state[["FG"]][["aes_elements"]]
+
+    # ui elements that are automatically generated
+    auto_elements = state[["FG"]][["auto_elements"]]
+
+    # ui elements taht are more manually generated
+    manual_elements = state[["FG"]][["manual_elements"]]
+
+    # Available data sources
+    DSV = state[["FG"]][["DSV"]]
+
+
+
+    # Now we have empty elements defined
+    for(element_id in names(element_map)){
+      # Making the current element element id active
+      state[["FG"]][["current_fig"]]  =  element_id
+
+      # Getting the numeric position in the list corresponding
+      # to the current element id
+      ele_idx = element_map[[element_id]]
+
+      fig_isgood = TRUE
+      # first we set the figure name:
+      FM_le(state, paste0("loading figure idx: ", ele_idx ))
+      if(!is.null(elements[[ele_idx]][["element"]][["name"]])){
+        FM_le(state, paste0("setting name: ", elements[[ele_idx]][["element"]][["name"]]))
+        current_ele = FG_fetch_current_fig(state)
+        current_ele[["key"]] = elements[[ele_idx]][["element"]][["name"]]
+        state = FG_set_current_fig(state, current_ele)
+      }
+      if(!is.null(elements[[ele_idx]][["element"]][["notes"]])){
+        FM_le(state, paste0("notes found and set"))
+        current_ele = FG_fetch_current_fig(state)
+        current_ele[["notes"]] = elements[[ele_idx]][["element"]][["notes"]]
+        state = FG_set_current_fig(state, current_ele)
+      }
+
+      # Attaching data source
+      if(!is.null(elements[[ele_idx]][["element"]][["data_source"]][["id"]]) &
+         !is.null(elements[[ele_idx]][["element"]][["data_source"]][["idx"]])){
+        tmp_DSV = DSV[["catalog"]][c(DSV[["catalog"]][["id"]]  == elements[[ele_idx]][["element"]][["data_source"]][["id"]] &
+                                     DSV[["catalog"]][["idx"]] == elements[[ele_idx]][["element"]][["data_source"]][["idx"]]), ]
+        if(nrow(tmp_DSV) == 1){
+          FM_le(state, paste0("setting data source: ", tmp_DSV[["object"]][1]) )
+          current_ele = FG_fetch_current_fig(state)
+          current_ele[["fig_dsview"]] = tmp_DSV[["object"]][1]
+          state = FG_set_current_fig(state, current_ele)
+        } else {
+          FM_le(state, paste0("error locating data source, expecting 1 source found ", nrow(tmp_DSV)), entry_type="danger")
+        }
+      } else {
+        fig_isgood = FALSE
+      }
+
+      if(fig_isgood){
+      } else {
+        isgood = FALSE
+        tmp_msgs = c(paste0("fig id: ", element_id, " unable to find data source."))
+        FM_le(state, tmp_msgs, entry_type="danger")
+        msgs = c(msgs, tmp_msgs)
+      }
+
+
+
+      # If everything is good up to this point then we process the components
+      if(length(elements[[ele_idx]][["element"]][["components"]] > 0) & fig_isgood){
+
+        # This will pull out all of the ui_ids that realte to components.
+        # Basically all of the ui_ids that start with either select_component
+        # or text_component
+        all_comp_ids = sort(names(state[["FG"]][["ui"]])[
+                              grep(x=names(state[["FG"]][["ui"]]), pattern="^select_component|^text_component")
+                            ])
+
+
+        for(comp_idx in 1:length(elements[[ele_idx]][["element"]][["components"]])){
+          tmp_component = elements[[ele_idx]][["element"]][["components"]][[comp_idx]][["component"]]
+          add_component = TRUE
+          comp_err_msg = c()
+
+
+          if(!is.null(tmp_component [["type"]])){
+
+            # Zeroing out the input list for figure components. This prevents
+            # residual data from being reused when looping:
+            state[["FG"]][["ui"]][all_comp_ids] = ""
+
+            FM_le(state, paste0("  -> ", tmp_component[["type"]]))
+            if(tmp_component[["type"]] %in% names(plot_elements)){
+
+              # defining the component type:
+              state[["FG"]][["ui"]][["select_fg_element"]] = tmp_component[["type"]]
+
+
+              if(tmp_component[["type"]] %in% aes_elements){
+                # Processing components defined by aesthetics. These
+                # are plot components like geom_line, geom_point, etc
+
+                # All of the aesthetics defined (either ass aes or manual) for
+                # the current component
+                def_aes_all = c(names(tmp_component[["aes"]]), names(tmp_component[["manual"]]))
+
+                # Checking to see if all the required aes have been defined:
+                if(!all(plot_elements[[ tmp_component[["type"]] ]][["aes_req"]] %in% def_aes_all)){
+                  add_component = FALSE
+                  isgood        = FALSE
+                  missing_aes = plot_elements[[ tmp_component[["type"]] ]][["aes_req"]][
+                      !c(plot_elements[[ tmp_component[["type"]] ]][["aes_req"]] %in% def_aes_all)
+                       ]
+                  comp_err_msg = c( comp_err_msg,
+                              paste0("  -> missing required aesthetic(s): ", paste0(missing_aes, collapse=", ") ) )
+                }
+
+
+                # Making sure the specified ui elements are allowed:
+                if(!all(def_aes_all %in% plot_elements[[ tmp_component[["type"]] ]][["ui_aes"]] )){
+                  add_component = FALSE
+                  isgood        = FALSE
+                  missing_aes = def_aes_all[
+                      !c( def_aes_all %in% plot_elements[[ tmp_component[["type"]] ]][["ui_aes"]] )
+                       ]
+                  comp_err_msg = c( comp_err_msg,
+                              paste0("  -> extra aesthetic(s) found: ", paste0(missing_aes, collapse=", ")))
+                }
+
+                # Making sure that something has been defined
+                if(is.null(tmp_component[["aes"]]) && is.null(tmp_component[["manual"]])){
+                  add_component = FALSE
+                  isgood        = FALSE
+                  comp_err_msg = c( comp_err_msg,
+                              paste0("  -> both aes and manual fields are NULL"))
+                }
+
+                if(add_component){
+                  # Adding aesthetics
+                  if(!is.null(tmp_component[["aes"]])){
+                    for(cname in names( tmp_component[["aes"]])){
+                      cname_ui = paste0("select_component_", cname)
+                      state[["FG"]][["ui"]][[cname_ui]] = tmp_component[["aes"]][[cname]]
+                    }
+                  }
+                  # Manual
+                  if(!is.null(tmp_component[["manual"]])){
+                    for(cname in names( tmp_component[["manual"]])){
+                      # setting the select component to manual
+                      state[["FG"]][["ui"]][[paste0("select_component_", cname)]] = "manual"
+
+                      # now setting the manual value
+                      cname_ui = paste0("text_component_", cname, "_manual")
+                      state[["FG"]][["ui"]][[cname_ui]] = tmp_component[["manual"]][[cname]]
+                    }
+                  }
+                }
+              } else {
+                # These are other ggplot components like scales and labels
+                # JMH this next line isn't needed?
+                #manual_elements[[  tmp_component[["type"]] ]]
+                allowed_options = as.vector(unlist(manual_elements[[  tmp_component[["type"]]  ]][["mapping"]]))
+                found_options   = names(tmp_component[["options"]])
+
+                # Making sure the found options are good
+                if(!all(found_options %in% allowed_options)){
+                  add_component = FALSE
+                  isgood        = FALSE
+                  extra_options = found_options[!(found_options %in% allowed_options)]
+                  comp_err_msg = c( comp_err_msg,
+                              paste0("  -> extra options found: ", paste0(extra_options, collapse=", ")))
+                }
+
+                if(add_component){
+                  for(oname_ui in names( manual_elements[[  tmp_component[["type"]]  ]][["mapping"]] )){
+
+                    oname = manual_elements[[  tmp_component[["type"]]  ]][["mapping"]][[oname_ui]]
+                    if(oname %in% names(tmp_component[["options"]])){
+                      state[["FG"]][["ui"]][[oname_ui]] = tmp_component[["options"]][[oname]]
+                    } else {
+                      # This clears out any previous definitions
+                      state[["FG"]][["ui"]][[oname_ui]] = ""
+                    }
+                  }
+                }
+              }
+            } else {
+              add_component = FALSE
+              isgood = FALSE
+              tmp_msg = paste0("unknown plot component type: ", tmp_component[["type"]] )
+              msgs = c(msgs, tmp_msg)
+              FM_le(state,tmp_msg,entry_type="danger")
+            }
+          } else {
+              add_component = FALSE
+              isgood = FALSE
+              tmp_msg = paste0("plot type not defined")
+              msgs = c(msgs, tmp_msg)
+              FM_le(state,tmp_msg,entry_type="danger")
+          }
+
+          if(add_component){
+            fgb_res  = fers_builder(state)
+            if(fgb_res[["isgood"]]){
+              state = FG_build( state,
+                cmd     = fgb_res[["cmd"]],
+                pll     = fgb_res[["pll"]],
+                element = fgb_res[["element"]],
+                desc    = fgb_res[["desc"]])
+
+              # Checking to make sure the component addition worked:
+              current_fig = FG_fetch_current_fig(state)
+              if(!current_fig[["add_isgood"]]){
+                isgood         = FALSE
+                add_component = FALSE
+                comp_err_msg = c(comp_err_msg, current_fig[["msgs"]])
+              }
+              #browser()
+            } else {
+              isgood         = FALSE
+              add_component = FALSE
+              comp_err_msg = c(comp_err_msg,  paste0(element_id, ": fers_builder() failed"))
+              comp_err_msg = c(comp_err_msg, fgb_res[["msgs"]])
+            }
+          }
+          # Flushing all the error messages
+          if(!add_component){
+            comp_err_msg = c(
+              paste0("figure idx: ", ele_idx, ", component idx: ", comp_idx, ", type: ", tmp_component[["type"]] ),
+              comp_err_msg)
+            msgs = c(msgs, comp_err_msg)
+            FM_le(state,comp_err_msg,entry_type="danger")
+          }
+        }
+      }
+    }
+
+
+    # If we failed somewhere up there then we return a bad status
+    if(!fig_isgood){
+      isgood = FALSE
+    }
+  }
+
+  formods::FM_le(state,paste0("module isgood: ",isgood))
+
+  if(formods::is_shiny(session)){
+    FM_set_mod_state(session, mod_ID, state)
   } else {
-    session = FM_set_mod_state(session, id, state)
+    session = FM_set_mod_state(session, mod_ID, state)
   }
 
-  # Required for proper reaction:
-  rsc[[id]]  = list(FG = list(checksum=state[["FG"]][["checksum"]]))
+  res = list(isgood      = isgood,
+             msgs        = msgs,
+             session     = session,
+             input       = input,
+             react_state = react_state,
+             state       = state)
+
+res}
+
+#'@export
+#'@title Make List of Current FG State
+#'@description Converts the current FG state into a preload list.
+#'@param state FG state object
+#'@return list with the following elements
+#' \itemize{
+#'   \item{isgood:}       Boolean indicating the exit status of the function.
+#'   \item{msgs:}         Messages to be passed back to the user.
+#'   \item{yaml_list:}    Lists with preload components.
+#'}
+#'@examples
+#' sess_res = FG_test_mksession()
+#' state = sess_res$state
+#' res = FG_mk_preload(state)
+FG_mk_preload     = function(state){
+  isgood    = TRUE
+  msgs      = c()
+  err_msg   = c()
+
+  ylist     = list(
+      fm_yaml  = file.path("config", basename(state[["FM_yaml_file"]])),
+      mod_yaml = file.path("config", basename(state[["MOD_yaml_file"]])),
+      elements = list()
+  )
+
+
+  DSV = state[["FG"]][["DSV"]]
+
+  if(DSV[["hasds"]]){
+    ele_idx = 1
+    # Walking through each element:
+    for(element_id in names(state[["FG"]][["figs"]])){
+      tmp_source_ele = state[["FG"]][["figs"]][[element_id]]
+
+      # Finding the data source:
+      dsv_row =
+      DSV[["catalog"]][
+        DSV[["catalog"]][["object"]] == tmp_source_ele[["fig_dsview"]], ]
+      ds_id  = dsv_row[["id"]]
+      ds_idx = dsv_row[["idx"]]
+
+      # Creates the empty element:
+      tmp_element = list(
+        idx   = tmp_source_ele[["idx"]],
+        name  = tmp_source_ele[["key"]],
+        notes = tmp_source_ele[["notes"]],
+        data_source = list(
+          id  = ds_id,
+          idx = ds_idx),
+        components = list())
+
+      FM_le(state, paste0("saving element (", tmp_source_ele[["idx"]], ") ", tmp_source_ele[["key"]]))
+
+      # Adding components:
+      if(is.data.frame(tmp_source_ele[["elements_table"]])){
+        comp_idx = 1
+        for(tmp_key in tmp_source_ele[["elements_table"]][["Key"]]){
+          if(tmp_key %in% names(tmp_source_ele[["elements_list"]])){
+            if("pll" %in% names(tmp_source_ele[["elements_list"]][[tmp_key]])){
+              tmp_element[["components"]][[comp_idx]] = list(component=
+                tmp_source_ele[["elements_list"]][[tmp_key]][["pll"]])
+              FM_le(state, paste0("  -> ",tmp_key, ": ", tmp_source_ele[["elements_list"]][[tmp_key]][["pll"]][["type"]]) )
+            } else {
+              tmp_err_msg =paste0("missing preload list (pll) for key: ", tmp_key)
+              err_msg = c(err_msg, tmp_err_msg)
+              FM_le(state,  tmp_err_msg, entry_type="danger")
+              isgood = FALSE
+            }
+          } else {
+            tmp_err_msg = paste0("  -> missing key: ",tmp_key)
+            err_msg = c(err_msg, tmp_err_msg)
+            FM_le(state,  tmp_err_msg, entry_type="danger")
+            isgood = FALSE
+          }
+          comp_idx = comp_idx + 1
+        }
+      }
+
+      # Appending element
+      ylist[["elements"]][[ele_idx]] = list(element = tmp_element)
+      ele_idx = ele_idx + 1
+    }
+  }
+
+  formods::FM_le(state,paste0("mk_preload isgood: ",isgood))
+
+  yaml_list = list()
+  yaml_list[[ state[["id"]] ]]  = ylist
+
+  if(!isgood && !is.null(err_msg)){
+    msgs = c(msgs, err_msg)
+  }
 
   res = list(
-    isgood  = isgood,
-    session = session,
-    input   = input,
-    state   = state,
-    rsc     = rsc
-  )
-}
+    isgood    = isgood,
+    msgs      = msgs,
+    yaml_list = yaml_list)
+res}
 

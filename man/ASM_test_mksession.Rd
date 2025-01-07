@@ -4,38 +4,21 @@
 \alias{ASM_test_mksession}
 \title{Populate Session Data for Module Testing}
 \usage{
-ASM_test_mksession(
-  session,
-  id = "ASM",
-  id_UD = "UD",
-  id_DW = "DW",
-  full_session = TRUE
-)
+ASM_test_mksession(session = list())
 }
 \arguments{
 \item{session}{Shiny session variable (in app) or a list (outside of app)}
-
-\item{id}{An ID string that corresponds with the ID used to call the modules UI elements}
-
-\item{id_UD}{An ID string that corresponds with the ID used to call the UD modules UI elements}
-
-\item{id_DW}{An ID string that corresponds with the ID used to call the DW modules UI elements}
-
-\item{full_session}{Boolean to indicate if the full test session should be created (default \code{TRUE}).}
 }
 \value{
-list with the following elements
-\itemize{
-  \item{isgood:} Boolean indicating the exit status of the function.
-  \item{session:} The value Shiny session variable (in app) or a list (outside of app) after initialization.
-  \item{input:} The value of the shiny input at the end of the session initialization.
-  \item{state:} App state.
-  \item{rsc:} The \code{react_state} components.
-}
+The ASM portion of the `all_sess_res` returned from \code{\link{FM_app_preload}}
 }
 \description{
 Populates the supplied session variable for testing.
 }
 \examples{
-sess_res = ASM_test_mksession(session=list(), full_session=FALSE)
+session = shiny::MockShinySession$new()
+sess_res = ASM_test_mksession(session=session)
+}
+\seealso{
+\code{\link{FM_app_preload}}
 }

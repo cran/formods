@@ -34,9 +34,13 @@ ui <- dashboardPage(
          box(title="Load Results",
            "ui_ud_text_load_result",
            htmlOutput(NS("UD", "ui_ud_text_load_result"))),
+         box(title="Workflows",
+           "ui_ud_workflows",
+           htmlOutput(NS("UD", "ui_ud_workflows")))),
+       fluidRow(
          box(title="Data Preview",
            "ui_ud_data_preview",
-           htmlOutput(NS("UD", "ui_ud_data_preview")))),
+           htmlOutput(NS("UD", "ui_ud_data_preview")), width=12)),
        fluidRow(
          box(title="Generated Code",
            "ui_ud_ace_code",
@@ -56,8 +60,15 @@ server <- function(input, output, session) {
   # changes in the module state outside of the module
   react_FM = reactiveValues()
 
+  # This is the list of module ids used for reproducable script generation. The
+  # order here is important.
+  mod_ids = c("UD", "DW", "FG")
+
   # Module server
-  UD_Server(id="UD", react_state=react_FM)
+  ASM_Server(id="ASM", react_state=react_FM, mod_ids=mod_ids)
+
+  # Module server
+  UD_Server(id="UD", id_ASM="ASM", react_state=react_FM)
 
   # Current state outside of the module
   output$ui_state  =  renderText({

@@ -21,9 +21,9 @@ Start a modal screen pause.
 }
 \examples{
 # We need a module state object and Shiny session objects to use this function:
-sess_res = UD_test_mksession(session=list())
+sess_res = UD_test_mksession()
 session = sess_res$session
 state = sess_res$state
-FM_pause_screen(state, session)
+FM_pause_screen(state, session, "pausing")
 FM_resume_screen(state, session)
 }

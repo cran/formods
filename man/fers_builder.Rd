@@ -15,6 +15,8 @@ list containing the following elements
  \item{isgood:} Return status of the function.
  \item{cmd:}    ggplot R command as a character string
  \item{element:} The type of element being added
+ \item{pll:}    Preload list (pll) containing components to save with
+ mk_preload.
  \item{desc:}   Verbose description of the element
  \item{msgs:}   Messages to be passed back to the user
 }
@@ -26,7 +28,7 @@ of a ggplot object \code{p}.
 }
 \examples{
 \donttest{
-sess_res = FG_test_mksession(session=list(), full_session=FALSE)
+sess_res = FG_test_mksession()
 state = sess_res$state
 fb_res = fers_builder(state)
 }

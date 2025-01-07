@@ -23,6 +23,7 @@ list containing the following elements
    \item{label: Text label for the dataset}
    \item{MOD_TYPE: Short name for the type of module.}
    \item{id: module ID}
+   \item{idx: unique numerical ID to identify this dataset in the module.}
    \item{DS: Dataframe containing the actual dataset.}
    \item{DSMETA: Metadata describing DS, see \code{FM_fetch_ds()} for
    details on the format.}
@@ -52,6 +53,6 @@ state = UD_fetch_state(
            session       = session,
            FM_yaml_file  = FM_yaml_file,
            MOD_yaml_file = MOD_yaml_file )
-  
- ds_res = UD_fetch_ds(state) 
+
+ ds_res = UD_fetch_ds(state)
 }

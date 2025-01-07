@@ -16,6 +16,7 @@ List with information about the app with the following structure
   \item{uiele_packages:} UI element for installed packages to be used in shiny apps.
   \item{uiele_options:}  UI element for current options.
   \item{uiele_modules: } UI element for loaded formods modules to be used in shiny apps.
+  \item{modules: }  List with formods module IDs used in the app as the element names. Each contains details about that module.
   \item{msgs:}  System information as text to be used in a report/terminal.
   \item{si_packages} Dataframe with currently used packages.
   \item{si_options} Dataframe with current options
@@ -26,8 +27,7 @@ Returns diagnostic information about the app
 }
 \examples{
 # We need a Shiny session object to use this function:
-id="UD"
-sess_res = UD_test_mksession(session=list(), id=id)
+sess_res = UD_test_mksession()
 session = sess_res$session
 app_info  = FM_fetch_app_info(session)
 app_info$msgs

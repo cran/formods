@@ -248,10 +248,11 @@ DW_Server <- function(id,
 
         uiele = tagList(uiele,
           shinyWidgets::pickerInput(
+             label      = state[["MC"]][["labels"]][["select_dw_views"]],
              inputId    = NS(id, "select_dw_views"),
              selected   = current_view[["id"]],
              choices    = choices,
-             width      = "fit",
+             width      = state[["MC"]][["formatting"]][["select_dw_views"]][["width"]],
              inline     = TRUE,
              choicesOpt = NULL))
       }
@@ -1345,21 +1346,7 @@ DW_Server <- function(id,
         FM_le(state, "reaction state updated")
 
         # Checking if there are exportable datasets:
-        hasds = FALSE
-        dw_views    = names(state[["DW"]][["views"]])
-        for(dw_view in dw_views){
-          tmp_checksum      = state[["DW"]][["views"]][[dw_view]][["checksum"]]
-          tmp_object_name   = state[["DW"]][["views"]][[dw_view]][["view_ds_object_name"]]
-          tmp_contents      = state[["DW"]][["views"]][[dw_view]][["WDS"]]
-          tmp_et            = state[["DW"]][["views"]][[dw_view]][["elements_table"]]
-          if(!is.null(tmp_checksum)    &
-             !is.null(tmp_object_name) &
-             !is.null(tmp_et)          &
-             !is.null(tmp_contents)){
-             hasds = TRUE
-          }
-        }
-        react_state[[id]][["DW"]][["hasds"]]    = hasds
+        react_state[[id]][["DW"]][["hasds"]]    = DW_hasds(state)
 
         # Module checksum
         react_state[[id]][["DW"]][["checksum"]] = state[["DW"]][["checksum"]]
@@ -1450,7 +1437,7 @@ DW_Server <- function(id,
 #'@examples
 #' # Within shiny both session and input variables will exist,
 #' # this creates examples here for testing purposes:
-#' sess_res = DW_test_mksession(session=list())
+#' sess_res = DW_test_mksession()
 #' session = sess_res$session
 #' input   = sess_res$input
 #'
@@ -1551,12 +1538,14 @@ DW_fetch_state = function(id,                    input,     session,
             # If this is run before the hot_table updates we want to skip it
             # So this, so we only update when the OLD_ET and the table in the UI have
             # the same number of rows
+            del_key = NULL
             if(nrow(OLD_ET) == nrow(hot_df)){
               for(eridx in 1:nrow(OLD_ET)){
                 if(hot_df[eridx, ]$Delete == FALSE){
                   NEW_ET = rbind(NEW_ET,
                                  OLD_ET[eridx,])
                 } else {
+                  del_key = hot_df[eridx, ][["Key"]]
                   # When we find the row being deleted we add a notification
                   del_row = hot_df[eridx, ]
                   notify_text = state[["MC"]][["notifications"]][["del_dw_element"]]
@@ -1617,6 +1606,11 @@ DW_fetch_state = function(id,                    input,     session,
               }
               # Saving the NEW_ET over the elements_table in the state
               current_view[["elements_table"]]  = NEW_ET
+
+              # Removing the key from the list as well
+              if(!is.null(del_key)){
+                current_view[["elements_list"]][[del_key]]  = NULL
+              }
               state = DW_set_current_view(state, current_view)
               FM_le(state, "wrangling element deleted")
             }
@@ -1778,6 +1772,9 @@ DW_fetch_state = function(id,                    input,     session,
     # From the original view we copy both the WDS and elements_table fields
     new_view[["WDS"]]            = original_view[["WDS"]]
     new_view[["elements_table"]] = original_view[["elements_table"]]
+    new_view[["elements_list"]]  = original_view[["elements_list"]]
+    new_view[["dwe_cntr"]]       = original_view[["dwe_cntr"]]
+
     state = DW_set_current_view(state, new_view)
 
     # Setting hold for views select
@@ -1819,6 +1816,17 @@ DW_fetch_state = function(id,                    input,     session,
   # Saving the state
   FM_set_mod_state(session, id, state)
 
+  # Uncomment below to debug
+  #current_view = DW_fetch_current_view(state)
+  #message(current_view[["key"]])
+  #message("Table details:")
+  #tidyr::as_tibble(current_view[["elements_table"]])
+  #
+  #message("List details:")
+  #message(paste0("Counter: ", current_view[["dwe_cntr"]]))
+  #message(paste0("List elements: ", paste0(names(current_view[["elements_list"]]), collapse=", ")))
+  #message(str(current_view[["elements_list"]]))
+
   # Returning the state
 state }
 
@@ -1836,7 +1844,7 @@ state }
 #'@examples
 #' # Within shiny both session and input variables will exist,
 #' # this creates examples here for testing purposes:
-#' sess_res = DW_test_mksession(session=list())
+#' sess_res = DW_test_mksession()
 #' session = sess_res$session
 #' input   = sess_res$input
 #'
@@ -1961,6 +1969,8 @@ state }
 #'  \item{isgood:} Return status of the function
 #'  \item{cmd:}    Data wrangling R command
 #'  \item{action:} The action being performed
+#'  \item{pll:}    Preload list (pll) containing components to save with
+#'  mk_preload.
 #'  \item{desc:}   Verbose description of the action
 #'  \item{msgs:}   Messages to be passed back to the user
 #'}
@@ -1972,6 +1982,9 @@ dwrs_builder = function(state){
   cmd    = ""
   desc   = ""
   action = ""
+
+  # Preload list
+  pll    = list()
 
 
   action         = state[["DW"]][["ui"]][["select_dw_element"]]
@@ -2045,9 +2058,7 @@ dwrs_builder = function(state){
       isgood = FALSE
       msgs = c(msgs, state[["MC"]][["errors"]][["fds_select_column"]])
     }
-  } else if(action == "ungroup"){
-    # Nothing needs to be done here
-  } else if(action == "onerow"){
+  } else if(action %in%  c("onerow", "ungroup")){
     # Nothing needs to be done here
   } else {
     isgood = FALSE
@@ -2089,6 +2100,13 @@ dwrs_builder = function(state){
                       paste(ui[["fds_filter_rhs"]], collapse=','))
       }
       cmd = paste0(view_ds_object_name,  " = dplyr::filter(", view_ds_object_name, ",", cond_str, ")")
+
+      # Packing up the preload list:
+      pll[["action"]]     = action
+      pll[["column"]]     = ui[["select_fds_filter_column"]]
+      pll[["operator"]]   = ui[["select_fds_filter_operator"]]
+      pll[["rhs"]]        = ui[["fds_filter_rhs"]]
+
     } else if(action == "mutate"){
       rhs_str = ui[["select_fds_mutate_rhs"]]
       cmd = paste0(view_ds_object_name, " = dplyr::mutate(", view_ds_object_name,",",
@@ -2097,6 +2115,12 @@ dwrs_builder = function(state){
                   rhs_str, ")")
       desc = paste( ui[["select_fds_mutate_column"]],
                     "=", rhs_str)
+
+      # Packing up the preload list:
+      pll[["action"]]     = action
+      pll[["column"]]     = ui[["select_fds_mutate_column"]]
+      pll[["rhs"]]        = ui[["select_fds_mutate_rhs"]]
+
     } else if(action == "rename"){
       new_name =  ui[["fds_rename_rhs"]]
       cmd = paste0(view_ds_object_name, " = dplyr::rename(", view_ds_object_name,",",
@@ -2106,18 +2130,33 @@ dwrs_builder = function(state){
                   ")")
       desc = paste(ui[["select_fds_rename_column"]], " to ", new_name)
 
+      # Packing up the preload list:
+      pll[["action"]]     = action
+      pll[["column"]]     = ui[["select_fds_rename_column"]]
+      pll[["rhs"]]        = ui[["fds_rename_rhs"]]
+
     } else if(action == "group"){
       group_cols_str   = paste(ui[["select_fds_group_column"]], collapse=', ')
       cmd = paste0(view_ds_object_name, " = dplyr::group_by(", view_ds_object_name,",",
                   group_cols_str,
                   ")")
       desc = paste(group_cols_str)
+
+      # Packing up the preload list:
+      pll[["action"]]     = action
+      pll[["column"]]     = ui[["select_fds_group_column"]]
+
     } else if(action == "select"){
       select_cols_str   = paste(ui[["select_fds_select_column"]], collapse=', ')
       cmd = paste0(view_ds_object_name, " = dplyr::select(", view_ds_object_name,",",
                   select_cols_str,
                   ")")
       desc = paste(select_cols_str)
+
+      # Packing up the preload list:
+      pll[["action"]]     = action
+      pll[["column"]]     = ui[["select_fds_select_column"]]
+
     } else if(action == "longer"){
       select_cols_str         = paste(ui[["select_fds_longer_column"]], collapse=', ')
       select_cols_str_quote   = paste(ui[["select_fds_longer_column"]], collapse='", "')
@@ -2131,6 +2170,13 @@ dwrs_builder = function(state){
                   ', values_to = "', values_to, '"',
                   ")")
       desc = paste(select_cols_str, "-->", names_to, ", ", values_to)
+
+      # Packing up the preload list:
+      pll[["action"]]     = action
+      pll[["column"]]     = ui[["select_fds_longer_column"]]
+      pll[["names"]]      = ui[["select_fds_longer_names"]]
+      pll[["values"]]     = ui[["select_fds_longer_values"]]
+
     } else if(action == "wider"){
       names_from        = ui[["select_fds_wider_names"]]
       values_from       = ui[["select_fds_wider_values"]]
@@ -2140,12 +2186,24 @@ dwrs_builder = function(state){
                   ', values_from = "', values_from, '"',
                   ")")
       desc = paste("names_from: ", names_from, ", values_from: ", values_from)
+
+      # Packing up the preload list:
+      pll[["action"]]     = action
+      pll[["names"]]      = ui[["select_fds_wider_names"]]
+      pll[["values"]]     = ui[["select_fds_wider_values"]]
+
     } else if(action == "ungroup"){
       cmd = paste0(view_ds_object_name, " = dplyr::ungroup(",view_ds_object_name,")")
       desc = state[["MC"]][["labels"]][["ungroup_data"]]
+
+      # Packing up the preload list:
+      pll[["action"]]     = action
     } else if(action == "onerow"){
       cmd = paste0(view_ds_object_name, " = dplyr::filter(", view_ds_object_name, ",row_number()==1)")
       desc = state[["MC"]][["labels"]][["keep_onerow"]]
+
+      # Packing up the preload list:
+      pll[["action"]]     = action
     } else {
       isgood = FALSE
       msgs = c(msgs, paste("Action not found:", action))
@@ -2156,6 +2214,7 @@ dwrs_builder = function(state){
              cmd    = cmd,
              action = action,
              desc   = desc,
+             pll    = pll,
              msgs   = msgs)
 
   res
@@ -2245,6 +2304,8 @@ DW_new_view = function(state){
          key                 = paste0("data_", view_id),
          WDS                 = state[["DW"]][["UD"]][["contents"]],
          elements_table      = NULL,
+         elements_list       = list(),
+         dwe_cntr            = 1,
          # Generated on save
          checksum            = digest::digest(state[["DW"]][["UD"]][["contents"]], algo=c("md5")),
          code                = NULL,
@@ -2339,7 +2400,7 @@ state}
 #'@examples
 #' # Within shiny both session and input variables will exist,
 #' # this creates examples here for testing purposes:
-#' sess_res = DW_test_mksession(session=list())
+#' sess_res = DW_test_mksession()
 #' session = sess_res$session
 #' input   = sess_res$input
 #'
@@ -2379,7 +2440,7 @@ state}
 #'@examples
 #' # Within shiny both session and input variables will exist,
 #' # this creates examples here for testing purposes:
-#' sess_res = DW_test_mksession(session=list())
+#' sess_res = DW_test_mksession()
 #' session = sess_res$session
 #' input   = sess_res$input
 #'
@@ -2432,14 +2493,24 @@ DW_add_wrangling_element = function(state, dwb_res, dwee_res){
 
   current_view = DW_fetch_current_view(state)
   # - append the cmd and description to the DW table
+  dwe_key = paste0("DWE ", current_view[["dwe_cntr"]])
+
+  # Adding to the table
   current_view[["elements_table"]] =
     rbind(current_view[["elements_table"]],
       data.frame(
+      Key           = dwe_key,
       Action        = dwb_res[["action"]],
       Description   = dwb_res[["desc"]],
       cmd           = dwb_res[["cmd"]],
       Status        = "Success",
       Delete        = FALSE))
+
+  # Adding to the list
+  current_view[["elements_list"]][[dwe_key]][["pll"]] = dwb_res[["pll"]]
+
+  # Incrementing the
+  current_view[["dwe_cntr"]] = current_view[["dwe_cntr"]] + 1
 
   current_view[["WDS"]]  = dwee_res[["DS"]]
   state = DW_set_current_view(state, current_view)
@@ -2454,7 +2525,7 @@ state}
 #'and isgood)
 #'@examples
 #' # This will create a formods DW state object for the example
-#' sess_res = DW_test_mksession(session=list())
+#' sess_res = DW_test_mksession()
 #' state   = sess_res$state
 #' code = DW_fetch_code(state)
 #' cat(code)
@@ -2497,24 +2568,24 @@ code}
 #'}
 #'
 #'@examples
-#'# We need a state object to use below
-#'sess_res = DW_test_mksession(session=list())
-#'state = sess_res$state
+#' # We need a state object to use below
+#' sess_res = DW_test_mksession()
+#' state = sess_res$state
 #'
-#'rpt = list(summary = list(), sheets=list())
+#' rpt = list(summary = list(), sheets=list())
 #'
-#'rpt_res = DW_append_report(state,
-#'  rpt     = rpt,
-#'  rpttype = "xlsx")
+#' rpt_res = DW_append_report(state,
+#'   rpt     = rpt,
+#'   rpttype = "xlsx")
 #'
-#'# Shows if report elements are present
-#'rpt_res$hasrptele
+#' # Shows if report elements are present
+#' rpt_res$hasrptele
 #'
-#'# Code chunk to generate report element
-#'cat(paste(rpt_res$code, collapse="\n"))
+#' # Code chunk to generate report element
+#' cat(paste(rpt_res$code, collapse="\n"))
 #'
-#'# Tabular summary of data views
-#'rpt_res$rpt$summary
+#' # Tabular summary of data views
+#' rpt_res$rpt$summary
 #'@seealso \code{\link{FM_generate_report}}
 DW_append_report = function(state, rpt, rpttype, gen_code_only=FALSE){
 
@@ -2589,6 +2660,7 @@ res}
 #'    \item{label: Text label for the dataset}
 #'    \item{MOD_TYPE: Short name for the type of module.}
 #'    \item{id: module ID}
+#'    \item{idx: unique numerical ID to identify this dataset in the module.}
 #'    \item{DS: Dataframe containing the actual dataset.}
 #'    \item{DSMETA: Metadata describing DS, see \code{FM_fetch_ds()} for
 #'    details on the format.}
@@ -2599,7 +2671,7 @@ res}
 #'}
 #'@examples
 #' # We need a state variable
-#' sess_res = DW_test_mksession(session=list())
+#' sess_res = DW_test_mksession()
 #' state = sess_res$state
 #'
 #' ds = DW_fetch_ds(state)
@@ -2612,8 +2684,9 @@ DW_fetch_ds = function(state){
 
   # Empty list for new datasets
   NEWDS = list(label      = NULL,
-               MOD_TYPE    = NULL,
+               MOD_TYPE   = NULL,
                id         = NULL,
+               idx        = NULL,
                DS         = NULL,
                DSMETA     = NULL,
                code       = NULL,
@@ -2631,6 +2704,7 @@ DW_fetch_ds = function(state){
     tmp_code_previous = state[["DW"]][["views"]][[dw_view]][["code_previous"]]
     tmp_contents      = state[["DW"]][["views"]][[dw_view]][["WDS"]]
     tmp_et            = state[["DW"]][["views"]][[dw_view]][["elements_table"]]
+    tmp_idx           = state[["DW"]][["views"]][[dw_view]][["idx"]]
 
     # The module code is the two chuncks pasted together
     modcode = paste(c(tmp_code), collapse="\n")
@@ -2650,6 +2724,7 @@ DW_fetch_ds = function(state){
       TMPDS = NEWDS
 
       TMPDS[["label"]]      = tmp_key
+      TMPDS[["idx"]]        = tmp_idx
       TMPDS[["DS"]]         = tmp_contents
       TMPDS[["checksum"]]   = DW_checksum
       TMPDS[["DSchecksum"]] = tmp_checksum
@@ -2675,419 +2750,306 @@ res}
 #'@title Populate Session Data for Module Testing
 #'@description Populates the supplied session variable for testing.
 #'@param session Shiny session variable (in app) or a list (outside of app)
-#'@param id An ID string that corresponds with the ID used to call the modules UI elements
-#'@param id_UD An ID string that corresponds with the ID used to call the UD modules UI elements
+#'@return The DW portion of the `all_sess_res` returned from \code{\link{FM_app_preload}}
+#'@examples
+#' session = shiny::MockShinySession$new()
+#' sess_res = DW_test_mksession(session=session)
+#'@seealso \code{\link{FM_app_preload}}
+DW_test_mksession = function(session=list()){
+
+  sources = c(system.file(package="formods", "preload", "ASM_preload.yaml"),
+              system.file(package="formods", "preload", "UD_preload.yaml"),
+              system.file(package="formods", "preload", "DW_preload.yaml"))
+  res = FM_app_preload(session=session, sources=sources)
+  res = res[["all_sess_res"]][["DW"]]
+
+res}
+
+
+#'@export
+#'@title Check DW State For Datasets
+#'@description Walks through the DW state object to see if there are any
+#'datasets available
+#'@param state DW state from \code{DW_fetch_state()}
+#'@return Logical TRUE if there is a dataset or FALSE otherwise.
+#'@examples
+#' sess_res = DW_test_mksession()
+#' state = sess_res[["state"]]
+#' DW_hasds(state)
+DW_hasds = function(state){
+  hasds = FALSE
+  dw_views    = names(state[["DW"]][["views"]])
+  for(dw_view in dw_views){
+    tmp_checksum      = state[["DW"]][["views"]][[dw_view]][["checksum"]]
+    tmp_object_name   = state[["DW"]][["views"]][[dw_view]][["view_ds_object_name"]]
+    tmp_contents      = state[["DW"]][["views"]][[dw_view]][["WDS"]]
+    tmp_et            = state[["DW"]][["views"]][[dw_view]][["elements_table"]]
+    if(!is.null(tmp_checksum)    &
+       !is.null(tmp_object_name) &
+       !is.null(tmp_et)          &
+       !is.null(tmp_contents)){
+       hasds = TRUE
+    }
+  }
+hasds}
+
+#'@export
+#'@title Preload Data for DW Module
+#'@description Populates the supplied session variable with information from
+#'list of sources.
+#'@param session     Shiny session variable (in app) or a list (outside of app)
+#'@param src_list    List of preload data (all read together with module IDs at the top level)
+#'@param yaml_res    List data from module yaml config
+#'@param mod_ID      Module ID of the module being loaded
+#'@param react_state Reactive shiny object (in app) or a list (outside of app) used to trigger reactions.
+#'@param quickload   Logical \code{TRUE} to load reduced analysis \code{FALSE} to load the full analysis
 #'@return list with the following elements
 #' \itemize{
-#'   \item{isgood:} Boolean indicating the exit status of the function.
-#'   \item{session:} The value Shiny session variable (in app) or a list (outside of app) after initialization.
-#'   \item{input:} The value of the shiny input at the end of the session initialization.
-#'   \item{state:} App state.
-#'   \item{rsc:} The \code{react_state} components.
+#'   \item{isgood:}      Boolean indicating the exit status of the function.
+#'   \item{msgs:}        Messages to be passed back to the user.
+#'   \item{session:}     Session object
+#'   \item{input:}       The value of the shiny input at the end of the session initialization.
+#'   \item{state:}       App state.
+#'   \item{react_state:} The \code{react_state} components.
 #'}
-#'@examples
-#' sess_res = DW_test_mksession(session=list())
-DW_test_mksession = function(session, id = "DW", id_UD="UD"){
-
+DW_preload  = function(session, src_list, yaml_res, mod_ID=NULL, react_state = list(), quickload=FALSE){
   isgood = TRUE
-  rsc    = list()
   input  = list()
+  msgs   = c()
 
-  # Populating the session with UD components
-  sess_res = UD_test_mksession(session, id = id_UD)
-  if(!("ShinySession" %in% class(session))){
-    session = sess_res[["session"]]
+  FM_yaml_file  = render_str(src_list[[mod_ID]][["fm_yaml"]])
+  MOD_yaml_file = render_str(src_list[[mod_ID]][["mod_yaml"]])
+  id_UD         = yaml_res[[mod_ID]][["mod_cfg"]][["MC"]][["module"]][["depends"]][["id_UD"]]
+
+
+  state = DW_fetch_state(id              = mod_ID,
+                         input           = input,
+                         session         = session,
+                         FM_yaml_file    = FM_yaml_file,
+                         MOD_yaml_file   = MOD_yaml_file,
+                         id_UD           = id_UD,
+                         react_state     = react_state)
+
+  elements = src_list[[mod_ID]][["elements"]]
+
+  if(!is.null(elements)){
+    if(length(elements) > 0){
+      # All of the numeric IDs in the preload
+      enumeric    = c()
+
+      # Map between list index and internal figure ID
+      element_map = list()
+
+      for(ele_idx in 1:length(elements)){
+        enumeric = c(enumeric, elements[[ele_idx]][["element"]][["idx"]])
+        element_map[[ paste0("view_",elements[[ele_idx]][["element"]][["idx"]] )]] = ele_idx
+      }
+      # Creating empty view placeholders
+      while(state[["DW"]][["view_cntr"]] < max(enumeric)){
+        state =DW_new_view(state)
+      }
+      # culling any unneeded views
+      for(view_id in names(state[["DW"]][["views"]])){
+        # This is a view that doesn't exist in elements so
+        # we need to cull it
+        if(!(view_id %in% names(element_map))){
+          # Setting the view to be deleted as the current view
+          state[["DW"]][["views"]][[ view_id ]] = NULL
+        }
+      }
+
+      # Now we have empty data views for the needed elements
+      for(view_id in names(element_map)){
+        state[["DW"]][["current_view"]] = view_id
+
+        # Getting the numeric position in the list corresponding to the current
+        # view id
+        ele_idx = element_map[[view_id]]
+
+        # first we set the name
+        FM_le(state, paste0("loading data view idx: ", ele_idx))
+        if(!is.null(elements[[ele_idx]][["element"]][["name"]])){
+          FM_le(state, paste0("setting name: ", elements[[ele_idx]][["element"]][["name"]]))
+          current_view = DW_fetch_current_view(state)
+          current_view[["key"]] = elements[[ele_idx]][["element"]][["name"]]
+          state = DW_set_current_view(state, current_view)
+        }
+
+        # Now we walk through any components
+        if(length(elements[[ele_idx]][["element"]][["components"]]) > 0){
+          for(comp_idx in 1:length(elements[[ele_idx]][["element"]][["components"]])){
+
+            tmp_component = elements[[ele_idx]][["element"]][["components"]][[comp_idx]][["component"]]
+
+            add_component = TRUE
+            # Here we construct the input based on the type of action selected
+            state[["DW"]][["ui"]][["select_dw_element"]] = tmp_component[["action"]]
+
+            FM_le(state, paste0("  -> ", tmp_component[["action"]]))
+
+            if(tmp_component[["action"]] == "filter"){
+              state[["DW"]][["ui"]][["select_fds_filter_column"]]   = tmp_component[["column"]]
+              state[["DW"]][["ui"]][["select_fds_filter_operator"]] = tmp_component[["operator"]]
+              state[["DW"]][["ui"]][["fds_filter_rhs"]]             = tmp_component[["rhs"]]
+            }else if(tmp_component[["action"]] == "mutate"){
+              state[["DW"]][["ui"]][["select_fds_mutate_column"]]   = tmp_component[["column"]]
+              state[["DW"]][["ui"]][["select_fds_mutate_rhs"]]      = tmp_component[["rhs"]]
+            }else if(tmp_component[["action"]] == "rename"){
+              state[["DW"]][["ui"]][["select_fds_rename_column"]]   = tmp_component[["column"]]
+              state[["DW"]][["ui"]][["fds_rename_rhs"]]             = tmp_component[["rhs"]]
+            }else if(tmp_component[["action"]] == "group"){
+              state[["DW"]][["ui"]][["select_fds_group_column"]]    = tmp_component[["column"]]
+            }else if(tmp_component[["action"]] == "longer"){
+              state[["DW"]][["ui"]][["select_fds_longer_column"]]    = tmp_component[["column"]]
+              state[["DW"]][["ui"]][["select_fds_longer_names"]]     = tmp_component[["names"]]
+              state[["DW"]][["ui"]][["select_fds_longer_values"]]    = tmp_component[["values"]]
+            }else if(tmp_component[["action"]] == "wider"){
+              state[["DW"]][["ui"]][["select_fds_wider_names"]]      = tmp_component[["names"]]
+              state[["DW"]][["ui"]][["select_fds_wider_values"]]     = tmp_component[["values"]]
+            }else if(tmp_component[["action"]] == "select"){
+              state[["DW"]][["ui"]][["select_fds_select_column"]]    = tmp_component[["column"]]
+            }else if(tmp_component[["action"]] == "ungroup"){
+            }else if(tmp_component[["action"]] == "onerow"){
+            }else{
+              isgood        = FALSE
+              add_component = FALSE
+              msgs = c(msgs,
+                       paste0("view_id:        ",view_id),
+                       paste0("Unknown action: ",tmp_component[["action"]])
+                       )
+            }
+
+
+            if(add_component){
+              dwb_res  = dwrs_builder(state)
+              dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
+              state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
+              # Capturing any failures:
+              if(!dwb_res[["isgood"]]){
+                isgood = FALSE
+                msgs = c(msgs, paste0(view_id, ": dwrs_builder() failed"))
+                msgs = c(msgs, dwb_res[["msgs"]])
+              }
+              if(!dwee_res[["isgood"]]){
+                isgood = FALSE
+                msgs = c(msgs, paste0(view_id, ": dw_eval_element() failed"))
+                msgs = c(msgs, dwee_res[["msgs"]])
+              }
+            }
+          }
+        }
+      }
+      # Setting holds
+      # Defaulting to the last view
+      state[["DW"]][["current_view"]] = names(state[["DW"]][["views"]])[ length(names(state[["DW"]][["views"]])) ]
+    }
   }
 
-  # Pulling out the react state components
-  rsc         = sess_res$rsc
-  react_state = rsc
-
-
-
-  # YAML files for the fetch calls below
-  FM_yaml_file  = system.file(package = "formods", "templates", "formods.yaml")
-  MOD_yaml_file = system.file(package = "formods", "templates", "DW.yaml")
-
-  # empty input
-  input = list()
-
-  # Creating an empty state object
-  state = DW_fetch_state(id              = id,           input           = input, session         = session,
-                         FM_yaml_file    = FM_yaml_file, MOD_yaml_file   = MOD_yaml_file,
-                         id_UD           = id_UD,        react_state     = react_state)
-
-
-  #------------------------------------
-  # Creating "Observations" data view
-  # Updating the key
-  state[["DW"]][["ui"]][["current_key"]] = "Observations"
-  current_view = DW_fetch_current_view(state)
-  current_view[["key"]] = state[["DW"]][["ui"]][["current_key"]]
-  state = DW_set_current_view(state, current_view)
-
-  # Adding the filtering elements:
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "EVID"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "=="
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = 0
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  # Removes BQL values
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "DV"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "!="
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = 0
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  # creating an IDCMT column for grouping
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "mutate"
-  state[["DW"]][["ui"]][["select_fds_mutate_column"]]   = "IDCMT"
-  state[["DW"]][["ui"]][["select_fds_mutate_rhs"]]      = "paste0(ID, ', ', CMT)"
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-
-  #------------------------------------
-  # Creating "PK 3mg SD IV" data view
-  state = DW_new_view(state)
-  # Updating the key
-  state[["DW"]][["ui"]][["current_key"]] = "PK 3mg SD IV"
-  current_view = DW_fetch_current_view(state)
-  current_view[["key"]] = state[["DW"]][["ui"]][["current_key"]]
-  state = DW_set_current_view(state, current_view)
-
-  # Adding the filtering elements:
-  # Just the observations
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "EVID"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "=="
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = 0
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  # Removes BQL values
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "DV"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "!="
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = 0
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  # The cohort we want:
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "Cohort"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "%in%"
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = "SD 3 mg IV"
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  # The output we want:
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "CMT"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "%in%"
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = "C_ng_ml"
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  #------------------------------------
-  # Creating "PK 3mg MD SC (first dose)" data view
-  state = DW_new_view(state)
-  # Updating the key
-  state[["DW"]][["ui"]][["current_key"]] = "PK 3mg MD SC (first dose)"
-  current_view = DW_fetch_current_view(state)
-  current_view[["key"]] = state[["DW"]][["ui"]][["current_key"]]
-  state = DW_set_current_view(state, current_view)
-
-  # Adding the filtering elements:
-  # Just the observations
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "EVID"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "=="
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = 0
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  # Removes BQL values
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "DV"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "!="
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = 0
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  # The cohort we want:
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "Cohort"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "%in%"
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = "MD 3 mg SC"
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  # Keeping just the first dose :
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "DOSE_NUM"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "=="
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = 1
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  # The output we want:
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "CMT"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "%in%"
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = "C_ng_ml"
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  #------------------------------------
-  # Creating "Parameters" data view
-  # Creates an empty new data view
-  state = DW_new_view(state)
-  # Setting the key
-  state[["DW"]][["ui"]][["current_key"]] = "Parameters"
-  current_view = DW_fetch_current_view(state)
-  current_view[["key"]] = state[["DW"]][["ui"]][["current_key"]]
-  state = DW_set_current_view(state, current_view)
-
-  # Grouping by subject
-  state[["DW"]][["ui"]][["select_dw_element"]]         = "group"
-  state[["DW"]][["ui"]][["select_fds_group_column"]]   = "ID"
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  # Getting the first row of each grouping
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "onerow"
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  # Selecting the columns to keep
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "select"
-  state[["DW"]][["ui"]][["select_fds_select_column"]]   =
-                   c("ID", "DOSE", "DOSE_STR", "Cohort",
-                     "ROUTE", "ka", "CL", "Vc", "Vp", "Q")
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-
-  # Pivot longer:
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "longer"
-  state[["DW"]][["ui"]][["select_fds_longer_column"]]   = c("ka", "CL", "Vc", "Vp", "Q")
-  state[["DW"]][["ui"]][["select_fds_longer_names"]]    = "parameter"
-  state[["DW"]][["ui"]][["select_fds_longer_values"]]   = "values"
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  #------------------------------------
-  # Creating "PK/PD 3mg SD IV" data view
-  state = DW_new_view(state)
-  # Updating the key
-  state[["DW"]][["ui"]][["current_key"]] = "PK/PD 3mg SD IV w/BQL"
-  current_view = DW_fetch_current_view(state)
-  current_view[["key"]] = state[["DW"]][["ui"]][["current_key"]]
-  state = DW_set_current_view(state, current_view)
-
-  # Adding the filtering elements:
-  # Just the observations
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "EVID"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "=="
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = 0
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
- ## Removes BQL values
- #state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
- #state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "DV"
- #state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "!="
- #state[["DW"]][["ui"]][["fds_filter_rhs"]]             = 0
- #
- #dwb_res  = dwrs_builder(state)
- #dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
- #state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  # The cohort we want:
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "Cohort"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "%in%"
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = "SD 3 mg IV"
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  #------------------------------------
-  # Creating "PK/PD 3mg MD SC (first dose)" data view
-  state = DW_new_view(state)
-  # Updating the key
-  state[["DW"]][["ui"]][["current_key"]] = "PK/PD 3mg MD SC (first dose) w/BQL"
-  current_view = DW_fetch_current_view(state)
-  current_view[["key"]] = state[["DW"]][["ui"]][["current_key"]]
-  state = DW_set_current_view(state, current_view)
-
-  # Adding the filtering elements:
-  # Just the observations
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "EVID"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "=="
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = 0
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
- ## Removes BQL values
- #state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
- #state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "DV"
- #state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "!="
- #state[["DW"]][["ui"]][["fds_filter_rhs"]]             = 0
- #
- #dwb_res  = dwrs_builder(state)
- #dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
- #state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  # The cohort we want:
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "Cohort"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "%in%"
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = "MD 3 mg SC"
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  # Keeping just the first dose :
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "DOSE_NUM"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "=="
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = 1
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  #------------------------------------
-  # Creating "PK 3mg SD IV w/BQL" data view
-  state = DW_new_view(state)
-  # Updating the key
-  state[["DW"]][["ui"]][["current_key"]] = "PK 3mg SD IV w/BQL"
-  current_view = DW_fetch_current_view(state)
-  current_view[["key"]] = state[["DW"]][["ui"]][["current_key"]]
-  state = DW_set_current_view(state, current_view)
-
-  # Adding the filtering elements:
-  # Just the observations
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "EVID"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "=="
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = 0
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  # The cohort we want:
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "Cohort"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "%in%"
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = "SD 3 mg IV"
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  # The output we want:
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "CMT"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "%in%"
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = "C_ng_ml"
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-  #------------------------------------
-  # Creating "PKPD 3mg MD IV w/BQL w/dosing" data view
-  state = DW_new_view(state)
-  # Updating the key
-  state[["DW"]][["ui"]][["current_key"]] = "PK 3mg SD IV w/BQL w/dosing"
-  current_view = DW_fetch_current_view(state)
-  current_view[["key"]] = state[["DW"]][["ui"]][["current_key"]]
-  state = DW_set_current_view(state, current_view)
-
-  # Adding the filtering elements:
-  # The cohort we want:
-  state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-  state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "Cohort"
-  state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "%in%"
-  state[["DW"]][["ui"]][["fds_filter_rhs"]]             = "MD 3 mg IV"
-
-  dwb_res  = dwrs_builder(state)
-  dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-  state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-# # The output we want:
-# state[["DW"]][["ui"]][["select_dw_element"]]          = "filter"
-# state[["DW"]][["ui"]][["select_fds_filter_column"]]   = "CMT"
-# state[["DW"]][["ui"]][["select_fds_filter_operator"]] = "%in%"
-# state[["DW"]][["ui"]][["fds_filter_rhs"]]             = "C_ng_ml"
-#
-# dwb_res  = dwrs_builder(state)
-# dwee_res = dw_eval_element(state, dwb_res[["cmd"]])
-# state    = DW_add_wrangling_element(state, dwb_res, dwee_res)
-
-  # This functions works both in a shiny app and outside of one
-  # if we're in a shiny app then the 'session' then the class of
-  # session will be a ShinySession. Otherwise it'll be a list if
-  # we're not in the app (ie just running test examples) then
-  # we need to set the state manually
-  if(("ShinySession" %in% class(session))){
-    FM_set_mod_state(session, id, state)
-  } else {
-    session = FM_set_mod_state(session, id, state)
-  }
+  # Setting holds:
+  state = set_hold(state)
 
   # Required for proper reaction:
-  rsc[[id]]  = list(DW = list(checksum=state[["DW"]][["checksum"]],
-                              hasds = TRUE))
+  react_state[[mod_ID]]  = list(DW  =
+          list(checksum = state[["DW"]][["checksum"]],
+               hasds    = DW_hasds(state)))
+
+  formods::FM_le(state,paste0("module isgood: ",isgood))
+
+  # Saving the state
+  if(is_shiny(session)){
+    FM_set_mod_state(session, mod_ID, state)
+  } else {
+    session = FM_set_mod_state(session, mod_ID, state)
+  }
+
+  res = list(isgood      = isgood,
+             msgs        = msgs,
+             session     = session,
+             input       = input,
+             react_state = react_state,
+             state       = state)
+res}
+
+#'@export
+#'@title Make List of Current DW State
+#'@description Converts the current DW state into a preload list.
+#'@param state DW state object
+#'@return list with the following elements
+#' \itemize{
+#'   \item{isgood:}       Boolean indicating the exit status of the function.
+#'   \item{msgs:}         Messages to be passed back to the user.
+#'   \item{yaml_list:}    Lists with preload components.
+#'}
+#'@examples
+#' sess_res = DW_test_mksession()
+#' state = sess_res$state
+#' res = DW_mk_preload(state)
+DW_mk_preload     = function(state){
+  isgood    = TRUE
+  msgs      = c()
+  err_msg   = c()
+
+  ylist     = list(
+      fm_yaml  = file.path("config", basename(state[["FM_yaml_file"]])),
+      mod_yaml = file.path("config", basename(state[["MOD_yaml_file"]])),
+      elements = list()
+  )
+
+  ele_idx = 1
+  # Walking through each element:
+  for(element_id in names(state[["DW"]][["views"]])){
+    tmp_source_ele = state[["DW"]][["views"]][[element_id]]
+
+    # Creates the empty element:
+    tmp_element = list(
+      idx  = tmp_source_ele[["idx"]],
+      name = tmp_source_ele[["key"]],
+      components = list())
+
+    FM_le(state, paste0("saving element (", tmp_source_ele[["idx"]], ") ", tmp_source_ele[["key"]]))
+
+    # Adding components:
+    if(is.data.frame(tmp_source_ele[["elements_table"]])){
+      comp_idx = 1
+      for(tmp_key in tmp_source_ele[["elements_table"]][["Key"]]){
+        if(tmp_key %in% names(tmp_source_ele[["elements_list"]])){
+          if("pll" %in% names(tmp_source_ele[["elements_list"]][[tmp_key]])){
+            tmp_element[["components"]][[comp_idx]] = list(component=
+              tmp_source_ele[["elements_list"]][[tmp_key]][["pll"]])
+            FM_le(state, paste0("  -> ",tmp_key, ": ", tmp_source_ele[["elements_list"]][[tmp_key]][["pll"]][["action"]]) )
+          } else {
+            tmp_err_msg = paste0("  -> missing preload list (pll) for key: ", tmp_key)
+            FM_le(state,  tmp_err_msg, entry_type="danger")
+            err_msg     = c(err_msg, tmp_err_msg)
+            isgood = FALSE
+          }
+        } else {
+          tmp_err_msg = paste0("  -> missing key: ", tmp_key)
+          FM_le(state,  tmp_err_msg, entry_type="danger")
+          err_msg = c(err_msg, tmp_err_msg)
+          isgood = FALSE
+        }
+        comp_idx = comp_idx + 1
+      }
+    }
+
+    # Appending element
+    ylist[["elements"]][[ele_idx]] = list(element = tmp_element)
+    ele_idx = ele_idx + 1
+  }
+
+
+  formods::FM_le(state,paste0("mk_preload isgood: ",isgood))
+
+  yaml_list = list()
+  yaml_list[[ state[["id"]] ]]  = ylist
+
+  if(!isgood && !is.null(err_msg)){
+    msgs = c(msgs, err_msg)
+  }
 
   res = list(
-    isgood  = isgood,
-    session = session,
-    input   = input,
-    state   = state,
-    rsc     = rsc
-  )
-}
-
+    isgood    = isgood,
+    msgs      = msgs,
+    yaml_list = yaml_list)
+res}
