@@ -1,4 +1,4 @@
-1d64b14c7ca02b19a33f71f3c09f4992 *DESCRIPTION
+e91aa5d45a81b928737ac3f8ff7dd338 *DESCRIPTION
 eddb1b3d8057b7cec883c06878c192ed *LICENSE
 27b68d256f652c4eb3a024593fe65160 *NAMESPACE
 4077deb9dcf1698b670c891eb0fdb44c *NEWS.md
@@ -11,10 +11,10 @@ f0f5f128fa0a85d88aae062b79520064 *R/FG_Server.R
 93cc4d0bee8fbf6709dc800d6d5408ee *build/vignette.rds
 27f9bdff89455c03bbeaac7b4f9f8a2b *inst/doc/included_modules.R
 aa6840068ce4cd2f6a531c3cbd23e00c *inst/doc/included_modules.Rmd
-2e02fce256b035725f88e13978fd780e *inst/doc/included_modules.html
+c17f9f534acd98dcd6b220406bc34520 *inst/doc/included_modules.html
 943f932b858ac5766d92b9df248d2e31 *inst/doc/making_modules.R
 d53d3004ff4a62688f6c90e7d07cb77e *inst/doc/making_modules.Rmd
-a6000039eababc8b8aa19cb76a458d4f *inst/doc/making_modules.html
+c332c14acafcf0aee67e96541dfcfdf6 *inst/doc/making_modules.html
 5e270ae6034b339c2a13d20a5f7d2dec *inst/doc/preload.R
 3091c0e61e13a3894c3d696ee82a934e *inst/doc/preload.Rmd
 4324d9fad5ab0398e8fa40985170f26d *inst/doc/preload.html
@@ -155,7 +155,7 @@ a8dc443a04213b55bca3d47e0213484c *man/use_formods.Rd
 62b4ee678e475d2fb6b1ed6096619b3f *tests/testthat.R
 d490d6372a1393f236f9523a042cfcc3 *tests/testthat/test-ASM_module.R
 021e97489ff94e72f7380ecc27590882 *tests/testthat/test-DW_module.R
-e9644907e3da6e96754425290d0f1b7d *tests/testthat/test-FG_module.R
+cf55b8c1cc0530caa2d33789ac8bf50e *tests/testthat/test-FG_module.R
 75cfa703e15cd8a26bdbe0423d322e55 *tests/testthat/test-UD_module.R
 42f840af56213f60ea35e23dfe6c465b *tests/testthat/test-formods.R
 aa6840068ce4cd2f6a531c3cbd23e00c *vignettes/included_modules.Rmd
